@@ -9,9 +9,8 @@ interface AdminPanelProps {
   onClose: () => void;
   products: Product[];
   orders: Order[];
-  onAddProduct: (product: Omit<Product, 'id'>) => void;
-  onUpdateProduct: (id: number, updates: Partial<Product>) => void;
-  onDeleteProduct: (id: number) => void;
+  onLogin: (credentials: { username: string; password: string }) => void;
+  isAuthenticated: boolean;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -19,11 +18,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   onClose,
   products,
   orders,
-  onAddProduct,
-  onUpdateProduct,
-  onDeleteProduct
+  onLogin,
+  isAuthenticated
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders'>('dashboard');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -41,12 +38,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (credentials.username === 'admin' && credentials.password === 'admin123') {
-      setIsAuthenticated(true);
-      toast.success('Login successful!');
-    } else {
-      toast.error('Invalid credentials');
-    }
+    onLogin(credentials);
   };
 
   const handleAddProduct = (e: React.FormEvent) => {
@@ -55,7 +47,24 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       toast.error('Please fill in all required fields');
       return;
     }
-    onAddProduct(newProduct);
+    
+    const productToAdd: Product = {
+      id: Date.now(),
+      name: newProduct.name,
+      price: newProduct.price,
+      oldPrice: newProduct.oldPrice,
+      img: newProduct.img,
+      description: newProduct.description,
+      category: newProduct.category,
+      inStock: newProduct.inStock
+    };
+
+    // Update localStorage directly
+    const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+    const updatedProducts = [...currentProducts, productToAdd];
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+    
+    // Reset form
     setNewProduct({
       name: '',
       price: 0,
@@ -65,23 +74,43 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       category: '',
       inStock: true
     });
+    
+    toast.success('Product added successfully!');
+    // Reload the page to reflect changes
+    window.location.reload();
   };
 
   const handleUpdateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
-    onUpdateProduct(editingProduct.id, editingProduct);
+    
+    // Update localStorage directly
+    const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+    const updatedProducts = currentProducts.map((p: Product) => 
+      p.id === editingProduct.id ? editingProduct : p
+    );
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+    
     setEditingProduct(null);
+    toast.success('Product updated successfully!');
+    // Reload the page to reflect changes
+    window.location.reload();
   };
 
   const handleDeleteProduct = (id: number) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      onDeleteProduct(id);
+      // Update localStorage directly
+      const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      const updatedProducts = currentProducts.filter((p: Product) => p.id !== id);
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
+      
+      toast.success('Product deleted successfully!');
+      // Reload the page to reflect changes
+      window.location.reload();
     }
   };
 
   const resetAndClose = () => {
-    setIsAuthenticated(false);
     setCredentials({ username: '', password: '' });
     setActiveTab('dashboard');
     setEditingProduct(null);
@@ -89,7 +118,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const totalCustomers = new Set(orders.map(order => order.phone)).size;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -146,9 +174,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   Login
                 </button>
               </form>
-              <p className="text-center text-sm text-gray-500 mt-4">
-                Demo credentials: admin / admin123
-              </p>
             </div>
           </div>
         ) : (
@@ -302,7 +327,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                         placeholder="Old Price"
                         value={newProduct.oldPrice || ''}
                         onChange={(e) => setNewProduct(prev => ({ ...prev, oldPrice: Number(e.target.value) }))}
-                        required
                         min="1"
                         className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
@@ -330,7 +354,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       />
                       <button
                         type="submit"
-                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                       >
                         <Plus className="h-4 w-4" />
                         Add Product
@@ -492,7 +516,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   placeholder="Old Price"
                   value={editingProduct.oldPrice}
                   onChange={(e) => setEditingProduct(prev => prev ? { ...prev, oldPrice: Number(e.target.value) } : null)}
-                  required
                   min="1"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />

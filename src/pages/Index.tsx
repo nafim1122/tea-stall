@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, Menu, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -186,7 +185,6 @@ const Index = () => {
     
     if (sanitizedUsername === 'admin' && sanitizedPassword === 'admin123') {
       setIsAuthenticated(true);
-      setIsAdminOpen(true);
       toast.success('Admin login successful');
     } else {
       toast.error('Invalid credentials');
@@ -454,7 +452,6 @@ const Index = () => {
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
         products={products}
-        onProductsChange={setProducts}
         orders={orders}
         onLogin={handleAdminLogin}
         isAuthenticated={isAuthenticated}
