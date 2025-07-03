@@ -207,27 +207,27 @@ const Index = () => {
   }, [isMobileMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50">
       {/* Navigation */}
-      <nav className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-40 border-b border-green-100">
+      <nav className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-40 border-b border-amber-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                Ghorer Bazar
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                Tea Time
               </h1>
             </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#home" className="text-gray-700 hover:text-green-600 font-medium transition-colors">
+              <a href="#home" className="text-gray-700 hover:text-amber-600 font-medium transition-colors">
                 Home
               </a>
-              <a href="#products" className="text-gray-700 hover:text-green-600 font-medium transition-colors">
+              <a href="#products" className="text-gray-700 hover:text-amber-600 font-medium transition-colors">
                 Products
               </a>
-              <a href="#about" className="text-gray-700 hover:text-green-600 font-medium transition-colors">
+              <a href="#about" className="text-gray-700 hover:text-amber-600 font-medium transition-colors">
                 About
               </a>
               <button
@@ -253,7 +253,7 @@ const Index = () => {
               {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-green-600 hover:text-green-700 transition-colors"
+                className="relative p-2 text-amber-600 hover:text-amber-700 transition-colors"
               >
                 <ShoppingCart className="h-6 w-6" />
                 {getCartItemCount() > 0 && (
@@ -266,7 +266,7 @@ const Index = () => {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-gray-700 hover:text-green-600 transition-colors mobile-menu-container"
+                className="md:hidden p-2 text-gray-700 hover:text-amber-600 transition-colors mobile-menu-container"
               >
                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -290,21 +290,21 @@ const Index = () => {
             <div className="px-4 py-2 space-y-2">
               <a
                 href="#home"
-                className="block px-3 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                className="block px-3 py-2 text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Home
               </a>
               <a
                 href="#products"
-                className="block px-3 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                className="block px-3 py-2 text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Products
               </a>
               <a
                 href="#about"
-                className="block px-3 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                className="block px-3 py-2 text-gray-700 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 About
@@ -331,10 +331,10 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-              Featured Products
+              Premium Tea Collection
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover our premium collection of organic and natural products
+              Discover our finest tea selections from the gardens of Sreemangal
             </p>
           </div>
           
@@ -358,24 +358,36 @@ const Index = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-16 bg-gradient-to-r from-green-50 to-emerald-50">
+      <section id="about" className="py-16 bg-gradient-to-r from-amber-50 to-orange-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-            About Ghorer Bazar
+            About Tea Time
           </h2>
           <div className="prose prose-lg max-w-none text-gray-700">
             <p className="mb-4">
-              Ghorer Bazar is a leading e-commerce platform committed to delivering safe, healthy, 
-              and organic food products across Bangladesh. We offer a diverse range of health-focused 
-              items, including premium mustard oil, pure ghee, organic honey, dates, chia seeds, 
-              and an assortment of nuts.
+              Welcome to Tea Time, your one-stop destination for the finest tea straight from 
+              the heart of Sreemangal, the tea capital of Bangladesh. We are passionate about 
+              delivering premium-quality tea leaves, blends, and accessories directly from the 
+              gardens to your doorstep.
             </p>
-            <p>
-              Each product is carefully sourced and crafted to ensure maximum health benefits, 
-              meeting the highest standards of purity and freshness. With a focus on convenience, 
-              Ghorer Bazar operates primarily online, bringing the goodness of nature straight 
-              to your doorstep.
+            <p className="mb-6">
+              Our journey started with a deep love for nature, tradition, and the aroma of 
+              freshly brewed tea. Whether you're a casual sipper or a true tea connoisseur, 
+              we have something special for everyone. We work closely with local tea growers 
+              to ensure every product meets the highest standards of freshness and authenticity.
             </p>
+            <div className="bg-white/70 rounded-lg p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-amber-800 mb-4">Contact Information</h3>
+              <div className="space-y-2 text-left max-w-md mx-auto">
+                <p><strong>Business Name:</strong> Tea Time</p>
+                <p><strong>Phone Numbers:</strong></p>
+                <ul className="ml-4 space-y-1">
+                  <li>📞 <a href="tel:+8801742236623" className="text-amber-600 hover:text-amber-700">+880 1742-236623</a></li>
+                  <li>📞 <a href="tel:+8801731085367" className="text-amber-600 hover:text-amber-700">+880 1731-085367</a></li>
+                </ul>
+                <p><strong>Address:</strong> Sreemangal - 3210, Bangladesh</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -388,9 +400,9 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">Ghorer Bazar</h3>
+              <h3 className="text-xl font-bold mb-4">Tea Time</h3>
               <p className="text-gray-300">
-                Your trusted source for organic and natural food products in Bangladesh.
+                Your trusted source for premium tea from Sreemangal, Bangladesh.
               </p>
             </div>
             <div>
@@ -404,13 +416,14 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
               <div className="space-y-2 text-gray-300">
-                <p>Call/WhatsApp: <a href="tel:+8801321208940" className="text-green-400 hover:text-green-300">+8801321208940</a></p>
-                <p>Hotline: <a href="tel:09642-922922" className="text-green-400 hover:text-green-300">09642-922922</a></p>
+                <p>Phone: <a href="tel:+8801742236623" className="text-amber-400 hover:text-amber-300">+880 1742-236623</a></p>
+                <p>Phone: <a href="tel:+8801731085367" className="text-amber-400 hover:text-amber-300">+880 1731-085367</a></p>
+                <p>Address: Sreemangal - 3210, Bangladesh</p>
               </div>
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
-            <p>&copy; 2024 Ghorer Bazar. All rights reserved.</p>
+            <p>&copy; 2024 Tea Time. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -427,6 +440,7 @@ const Index = () => {
           setIsCartOpen(false);
           setIsPaymentOpen(true);
         }}
+        total={getCartTotal()}
       />
 
       <PaymentModal
@@ -440,7 +454,7 @@ const Index = () => {
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
         products={products}
-        setProducts={setProducts}
+        onProductsChange={setProducts}
         orders={orders}
         onLogin={handleAdminLogin}
         isAuthenticated={isAuthenticated}
