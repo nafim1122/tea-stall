@@ -1,90 +1,105 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, User, Menu, X, Plus, Minus, Star, Leaf, Shield, Truck } from 'lucide-react';
-import { toast } from "sonner";
+import { ShoppingCart, Search, Menu, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { Product, CartItem, Order, PaymentData } from '../types';
+import { initialProducts } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
+import HeroSection from '../components/HeroSection';
 import CartModal from '../components/CartModal';
 import PaymentModal from '../components/PaymentModal';
-import AdminPanel from '../components/AdminPanel';
 import OrderHistory from '../components/OrderHistory';
-import HeroSection from '../components/HeroSection';
-import { Product, CartItem, Order } from '../types';
-import { initialProducts } from '../data/products';
+import AdminPanel from '../components/AdminPanel';
 
 const Index = () => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedProducts = localStorage.getItem('gb_products');
-    const savedOrders = localStorage.getItem('gb_orders');
-    const savedCart = localStorage.getItem('gb_cart');
-
-    if (savedProducts) {
-      try {
+    try {
+      const savedProducts = localStorage.getItem('products');
+      const savedCart = localStorage.getItem('cart');
+      const savedOrders = localStorage.getItem('orders');
+      
+      if (savedProducts) {
         const parsedProducts = JSON.parse(savedProducts);
-        setProducts(parsedProducts);
-        setFilteredProducts(parsedProducts);
-      } catch (error) {
-        console.error('Error loading products:', error);
+        if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
+          setProducts(parsedProducts);
+        }
       }
-    }
-
-    if (savedOrders) {
-      try {
-        setOrders(JSON.parse(savedOrders));
-      } catch (error) {
-        console.error('Error loading orders:', error);
+      
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        if (Array.isArray(parsedCart)) {
+          setCart(parsedCart);
+        }
       }
-    }
-
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error loading cart:', error);
+      
+      if (savedOrders) {
+        const parsedOrders = JSON.parse(savedOrders);
+        if (Array.isArray(parsedOrders)) {
+          setOrders(parsedOrders);
+        }
       }
+    } catch (error) {
+      console.error('Error loading data from localStorage:', error);
+      toast.error('Error loading saved data');
     }
   }, []);
 
-  // Save to localStorage when data changes
+  // Save to localStorage when state changes
   useEffect(() => {
-    localStorage.setItem('gb_products', JSON.stringify(products));
-    setFilteredProducts(products.filter(product => 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ));
-  }, [products, searchQuery]);
+    try {
+      localStorage.setItem('products', JSON.stringify(products));
+    } catch (error) {
+      console.error('Error saving products:', error);
+    }
+  }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('gb_orders', JSON.stringify(orders));
-  }, [orders]);
-
-  useEffect(() => {
-    localStorage.setItem('gb_cart', JSON.stringify(cart));
+    try {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    } catch (error) {
+      console.error('Error saving cart:', error);
+    }
   }, [cart]);
 
-  // Cart functions
-  const addToCart = (productId: number, quantity: number = 1) => {
+  useEffect(() => {
+    try {
+      localStorage.setItem('orders', JSON.stringify(orders));
+    } catch (error) {
+      console.error('Error saving orders:', error);
+    }
+  }, [orders]);
+
+  // Security: Input sanitization
+  const sanitizeInput = (input: string): string => {
+    return input.replace(/[<>]/g, '').trim();
+  };
+
+  const addToCart = (productId: number) => {
     const existingItem = cart.find(item => item.productId === productId);
+    
     if (existingItem) {
       setCart(cart.map(item =>
         item.productId === productId
-          ? { ...item, quantity: item.quantity + quantity }
+          ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
     } else {
-      setCart([...cart, { productId, quantity }]);
+      setCart([...cart, { productId, quantity: 1 }]);
     }
-    toast.success("Product added to cart!");
+    
+    toast.success('Product added to cart!');
   };
 
   const updateCartQuantity = (productId: number, quantity: number) => {
@@ -92,14 +107,17 @@ const Index = () => {
       removeFromCart(productId);
       return;
     }
+    
     setCart(cart.map(item =>
-      item.productId === productId ? { ...item, quantity } : item
+      item.productId === productId
+        ? { ...item, quantity }
+        : item
     ));
   };
 
   const removeFromCart = (productId: number) => {
     setCart(cart.filter(item => item.productId !== productId));
-    toast.success("Product removed from cart");
+    toast.info('Product removed from cart');
   };
 
   const clearCart = () => {
@@ -113,83 +131,96 @@ const Index = () => {
     }, 0);
   };
 
-  const getCartCount = () => {
-    return cart.reduce((count, item) => count + item.quantity, 0);
+  const getCartItemCount = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
-  // Order functions
-  const createOrder = (orderData: Omit<Order, 'id' | 'date' | 'items' | 'total'>) => {
-    const order: Order = {
+  const handleOrderComplete = (paymentData: PaymentData) => {
+    const orderItems = cart.map(item => {
+      const product = products.find(p => p.id === item.productId);
+      return {
+        name: product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        price: product?.price || 0
+      };
+    });
+
+    const newOrder: Order = {
       id: Date.now(),
-      date: new Date().toLocaleString(),
-      items: cart.map(item => {
-        const product = products.find(p => p.id === item.productId)!;
-        return {
-          name: product.name,
-          quantity: item.quantity,
-          price: product.price
-        };
-      }),
+      date: new Date().toLocaleDateString('en-GB'),
+      items: orderItems,
       total: getCartTotal(),
-      ...orderData
+      paymentMethod: paymentData.paymentMethod,
+      transactionId: paymentData.transactionId,
+      address: paymentData.address,
+      phone: paymentData.phone,
+      status: 'pending'
     };
-    
-    setOrders(prev => [...prev, order]);
+
+    setOrders([...orders, newOrder]);
     clearCart();
-    setIsCartOpen(false);
     setIsPaymentOpen(false);
-    toast.success("Order placed successfully!");
+    setIsCartOpen(false);
     
-    return order;
+    toast.success('Order placed successfully!');
   };
 
-  // Product management (Admin)
-  const addProduct = (product: Omit<Product, 'id'>) => {
-    const newProduct = { ...product, id: Date.now() };
-    setProducts(prev => [...prev, newProduct]);
-    toast.success("Product added successfully!");
+  const handleProductSelect = (productId: number) => {
+    const element = document.getElementById(`product-${productId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
-  const updateProduct = (id: number, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(product =>
-      product.id === id ? { ...product, ...updates } : product
-    ));
-    toast.success("Product updated successfully!");
+  const filteredProducts = searchQuery
+    ? products.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : products;
+
+  const handleAdminLogin = (credentials: { username: string; password: string }) => {
+    // Security: Simple authentication (in production, use proper backend authentication)
+    const sanitizedUsername = sanitizeInput(credentials.username);
+    const sanitizedPassword = sanitizeInput(credentials.password);
+    
+    if (sanitizedUsername === 'admin' && sanitizedPassword === 'admin123') {
+      setIsAuthenticated(true);
+      setIsAdminOpen(true);
+      toast.success('Admin login successful');
+    } else {
+      toast.error('Invalid credentials');
+    }
   };
 
-  const deleteProduct = (id: number) => {
-    setProducts(prev => prev.filter(product => product.id !== id));
-    toast.success("Product deleted successfully!");
-  };
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isMobileMenuOpen && !target.closest('.mobile-menu-container')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [isMobileMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       {/* Navigation */}
       <nav className="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-40 border-b border-green-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center">
-              <div className="flex items-center gap-2">
-                <Leaf className="h-8 w-8 text-green-600" />
-                <span className="font-bold text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Ghorer Bazar
-                </span>
-              </div>
-            </div>
-
-            {/* Desktop Search */}
-            <div className="hidden md:flex flex-1 max-w-lg mx-8">
-              <SearchBar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                products={products}
-                onProductSelect={addToCart}
-              />
+            <div className="flex-shrink-0">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                Ghorer Bazar
+              </h1>
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden md:flex items-center space-x-8">
               <a href="#home" className="text-gray-700 hover:text-green-600 font-medium transition-colors">
                 Home
               </a>
@@ -201,40 +232,41 @@ const Index = () => {
               </a>
               <button
                 onClick={() => setIsAdminOpen(true)}
-                className="text-red-600 hover:text-red-700 font-semibold transition-colors flex items-center gap-1"
+                className="text-red-600 hover:text-red-700 font-medium transition-colors"
               >
-                <User className="h-4 w-4" />
                 Admin
-              </button>
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-green-600 hover:text-green-700 transition-colors"
-              >
-                <ShoppingCart className="h-6 w-6" />
-                {getCartCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                    {getCartCount()}
-                  </span>
-                )}
               </button>
             </div>
 
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center gap-2">
+            {/* Desktop Search */}
+            <div className="hidden md:block flex-1 max-w-md mx-8">
+              <SearchBar
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                products={products}
+                onProductSelect={handleProductSelect}
+              />
+            </div>
+
+            {/* Cart and Mobile Menu */}
+            <div className="flex items-center space-x-4">
+              {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative p-2 text-green-600 hover:text-green-700 transition-colors"
               >
                 <ShoppingCart className="h-6 w-6" />
-                {getCartCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
-                    {getCartCount()}
+                {getCartItemCount() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {getCartItemCount()}
                   </span>
                 )}
               </button>
+
+              {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 text-green-600 hover:text-green-700 transition-colors"
+                className="md:hidden p-2 text-gray-700 hover:text-green-600 transition-colors mobile-menu-container"
               >
                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -247,95 +279,79 @@ const Index = () => {
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               products={products}
-              onProductSelect={addToCart}
+              onProductSelect={handleProductSelect}
             />
           </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden border-t border-green-100 bg-white">
-              <div className="px-4 py-4 space-y-2">
-                <a href="#home" className="block py-2 text-gray-700 hover:text-green-600 font-medium transition-colors">
-                  Home
-                </a>
-                <a href="#products" className="block py-2 text-gray-700 hover:text-green-600 font-medium transition-colors">
-                  Products
-                </a>
-                <a href="#about" className="block py-2 text-gray-700 hover:text-green-600 font-medium transition-colors">
-                  About
-                </a>
-                <button
-                  onClick={() => {
-                    setIsAdminOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="block py-2 text-red-600 hover:text-red-700 font-semibold transition-colors"
-                >
-                  Admin Panel
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-gray-200 mobile-menu-container">
+            <div className="px-4 py-2 space-y-2">
+              <a
+                href="#home"
+                className="block px-3 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </a>
+              <a
+                href="#products"
+                className="block px-3 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Products
+              </a>
+              <a
+                href="#about"
+                className="block px-3 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                About
+              </a>
+              <button
+                onClick={() => {
+                  setIsAdminOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Features */}
-      <section className="py-12 bg-white/50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Leaf className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">100% Organic</h3>
-              <p className="text-gray-600">All our products are certified organic and natural</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Quality Assured</h3>
-              <p className="text-gray-600">Rigorous quality checks for every product</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <Truck className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Fast Delivery</h3>
-              <p className="text-gray-600">Quick and safe delivery across Bangladesh</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Products Section */}
-      <section id="products" className="py-16">
-        <div className="max-w-7xl mx-auto px-4">
+      <section id="products" className="py-16 bg-white/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
               Featured Products
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-gray-600 max-w-2xl mx-auto">
               Discover our premium collection of organic and natural products
             </p>
           </div>
-
+          
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map(product => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={() => addToCart(product.id)}
-              />
+            {filteredProducts.map((product) => (
+              <div key={product.id} id={`product-${product.id}`}>
+                <ProductCard
+                  product={product}
+                  onAddToCart={() => addToCart(product.id)}
+                />
+              </div>
             ))}
           </div>
-
-          {filteredProducts.length === 0 && searchQuery && (
+          
+          {filteredProducts.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No products found matching "{searchQuery}"</p>
+              <p className="text-gray-500 text-lg">No products found</p>
             </div>
           )}
         </div>
@@ -343,26 +359,22 @@ const Index = () => {
 
       {/* About Section */}
       <section id="about" className="py-16 bg-gradient-to-r from-green-50 to-emerald-50">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
             About Ghorer Bazar
           </h2>
-          <div className="space-y-6 text-lg text-gray-700 leading-relaxed">
-            <p>
-              Ghorer Bazar is Bangladesh's leading e-commerce platform committed to delivering safe, 
-              healthy, and organic food products directly to your doorstep. We specialize in premium 
-              quality items including pure mustard oil, organic ghee, natural honey, fresh dates, 
-              chia seeds, and a carefully curated selection of nuts.
+          <div className="prose prose-lg max-w-none text-gray-700">
+            <p className="mb-4">
+              Ghorer Bazar is a leading e-commerce platform committed to delivering safe, healthy, 
+              and organic food products across Bangladesh. We offer a diverse range of health-focused 
+              items, including premium mustard oil, pure ghee, organic honey, dates, chia seeds, 
+              and an assortment of nuts.
             </p>
             <p>
-              Each product is meticulously sourced and crafted to ensure maximum health benefits, 
-              meeting the highest standards of purity and freshness. Our commitment to quality means 
-              every item undergoes rigorous testing before reaching your family.
-            </p>
-            <p>
-              With a focus on convenience and reliability, Ghorer Bazar operates primarily online, 
-              bringing the goodness of nature straight to your home with fast, secure delivery 
-              across Bangladesh.
+              Each product is carefully sourced and crafted to ensure maximum health benefits, 
+              meeting the highest standards of purity and freshness. With a focus on convenience, 
+              Ghorer Bazar operates primarily online, bringing the goodness of nature straight 
+              to your doorstep.
             </p>
           </div>
         </div>
@@ -373,48 +385,32 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <Leaf className="h-8 w-8 text-green-400" />
-                <span className="font-bold text-2xl">Ghorer Bazar</span>
-              </div>
-              <p className="text-gray-300 mb-4">
-                Your trusted source for organic and natural products in Bangladesh.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 className="text-xl font-bold mb-4">Ghorer Bazar</h3>
+              <p className="text-gray-300">
+                Your trusted source for organic and natural food products in Bangladesh.
               </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Quick Links</h4>
               <div className="space-y-2">
-                <p className="text-gray-300">
-                  <strong>Call/WhatsApp:</strong> <a href="tel:+8801321208940" className="text-green-400 hover:text-green-300">+8801321208940</a>
-                </p>
-                <p className="text-gray-300">
-                  <strong>Hotline:</strong> <a href="tel:09642-922922" className="text-green-400 hover:text-green-300">09642-922922</a>
-                </p>
+                <a href="#home" className="block text-gray-300 hover:text-white transition-colors">Home</a>
+                <a href="#products" className="block text-gray-300 hover:text-white transition-colors">Products</a>
+                <a href="#about" className="block text-gray-300 hover:text-white transition-colors">About</a>
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
-              <ul className="space-y-2">
-                <li><a href="#home" className="text-gray-300 hover:text-green-400 transition-colors">Home</a></li>
-                <li><a href="#products" className="text-gray-300 hover:text-green-400 transition-colors">Products</a></li>
-                <li><a href="#about" className="text-gray-300 hover:text-green-400 transition-colors">About Us</a></li>
-                <li><a href="#contact" className="text-gray-300 hover:text-green-400 transition-colors">Contact</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-4">Support</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-300 hover:text-green-400 transition-colors">Return Policy</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-green-400 transition-colors">Customer Care</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-green-400 transition-colors">FAQ</a></li>
-                <li><a href="#" className="text-gray-300 hover:text-green-400 transition-colors">Shipping Info</a></li>
-              </ul>
+              <h4 className="font-semibold mb-4">Contact</h4>
+              <div className="space-y-2 text-gray-300">
+                <p>Call/WhatsApp: <a href="tel:+8801321208940" className="text-green-400 hover:text-green-300">+8801321208940</a></p>
+                <p>Hotline: <a href="tel:09642-922922" className="text-green-400 hover:text-green-300">09642-922922</a></p>
+              </div>
             </div>
           </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-            <p className="text-gray-400">
-              &copy; 2024 Ghorer Bazar. All rights reserved.
-            </p>
+          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+            <p>&copy; 2024 Ghorer Bazar. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -431,24 +427,23 @@ const Index = () => {
           setIsCartOpen(false);
           setIsPaymentOpen(true);
         }}
-        total={getCartTotal()}
       />
 
       <PaymentModal
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         total={getCartTotal()}
-        onOrderComplete={createOrder}
+        onOrderComplete={handleOrderComplete}
       />
 
       <AdminPanel
         isOpen={isAdminOpen}
         onClose={() => setIsAdminOpen(false)}
         products={products}
+        setProducts={setProducts}
         orders={orders}
-        onAddProduct={addProduct}
-        onUpdateProduct={updateProduct}
-        onDeleteProduct={deleteProduct}
+        onLogin={handleAdminLogin}
+        isAuthenticated={isAuthenticated}
       />
     </div>
   );
