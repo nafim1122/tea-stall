@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CreditCard, Phone, MapPin, Shield, AlertCircle } from 'lucide-react';
 import { PaymentData } from '../types';
 import { toast } from "sonner";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [generatedOtp, setGeneratedOtp] = useState('');
 
   // Security: Input sanitization
   const sanitizeInput = (input: string): string => {
@@ -47,6 +49,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const validateTransactionId = (trxId: string): boolean => {
     return trxId.length >= 8 && trxId.length <= 20;
+  };
+
+  // Generate random 6-digit OTP
+  const generateOTP = (): string => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
   };
 
   useEffect(() => {
@@ -81,6 +88,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setOtpSent(false);
     setIsLoading(false);
     setErrors({});
+    setGeneratedOtp('');
   };
 
   const handleClose = () => {
@@ -110,17 +118,25 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     setErrors({});
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Generate OTP
+      const otp = generateOTP();
+      setGeneratedOtp(otp);
+      
+      // Simulate API call to send SMS
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       setOtpSent(true);
-      setFormData(prev => ({ ...prev, otp: '123456' })); // Demo OTP
-      toast.success('OTP sent successfully!');
+      toast.success(`OTP sent to ${formData.phone}! Your OTP is: ${otp}`);
+      console.log(`OTP sent to ${formData.phone}: ${otp}`);
     } catch (error) {
       toast.error('Failed to send OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const verifyOTP = (otpValue: string): boolean => {
+    return otpValue === generatedOtp;
   };
 
   const handleMethodSubmit = async (e: React.FormEvent) => {
@@ -164,8 +180,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         newErrors.phone = 'Please enter a valid phone number';
       }
       
-      if (!otpSent || !validateOTP(formData.otp)) {
+      if (!otpSent) {
+        newErrors.otp = 'Please request OTP first';
+      } else if (!validateOTP(formData.otp)) {
         newErrors.otp = 'Please enter a valid 6-digit OTP';
+      } else if (!verifyOTP(formData.otp)) {
+        newErrors.otp = 'Invalid OTP. Please check and try again.';
       }
 
       if (!formData.address.trim()) {
@@ -346,7 +366,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       <button
                         type="button"
                         onClick={sendOTP}
-                        disabled={otpSent || isLoading}
+                        disabled={otpSent || isLoading || !formData.phone}
                         className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base whitespace-nowrap"
                       >
                         {isLoading ? 'Sending...' : otpSent ? 'Sent' : 'Get OTP'}
@@ -360,29 +380,38 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      OTP Code *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.otp}
-                      onChange={(e) => handleInputChange('otp', e.target.value)}
-                      required
-                      maxLength={6}
-                      pattern="[0-9]{6}"
-                      className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
-                        errors.otp ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="Enter 6-digit OTP"
-                    />
-                    {errors.otp && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {errors.otp}
+                  {otpSent && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Enter OTP Code *
+                      </label>
+                      <div className="flex justify-center">
+                        <InputOTP
+                          maxLength={6}
+                          value={formData.otp}
+                          onChange={(value) => handleInputChange('otp', value)}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      {errors.otp && (
+                        <p className="text-red-500 text-xs mt-2 text-center flex items-center justify-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.otp}
+                        </p>
+                      )}
+                      <p className="text-center text-xs text-gray-500 mt-2">
+                        Enter the 6-digit code sent to your phone
                       </p>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
 
