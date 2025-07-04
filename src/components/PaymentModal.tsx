@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, CreditCard, Phone, MapPin, Shield, AlertCircle } from 'lucide-react';
 import { PaymentData } from '../types';
@@ -166,6 +167,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       if (!otpSent || !validateOTP(formData.otp)) {
         newErrors.otp = 'Please enter a valid 6-digit OTP';
       }
+
+      if (!formData.address.trim()) {
+        newErrors.address = 'Delivery address is required';
+      }
       
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -194,7 +199,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       const paymentData: PaymentData = {
         paymentMethod,
         transactionId: formData.transactionId,
-        phone: formData.phone
+        phone: formData.phone,
+        address: formData.address
       };
 
       onOrderComplete(paymentData);
@@ -214,6 +220,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl">
           <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/a8b8701a-7028-4152-bfc6-171ff21d753d.png" 
+              alt="Tea Time Logo" 
+              className="h-6 w-6"
+            />
             <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
             <h2 className="text-lg sm:text-xl font-bold text-gray-800">Payment</h2>
           </div>
@@ -262,55 +273,55 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </div>
               </div>
 
+              {/* Address Field - Common for all payment methods */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <MapPin className="h-4 w-4 inline mr-1" />
+                  Delivery Address *
+                </label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  required
+                  rows={3}
+                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
+                    errors.address ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter your full delivery address"
+                  maxLength={500}
+                />
+                {errors.address && (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.address}
+                  </p>
+                )}
+              </div>
+
               {paymentMethod === 'COD' ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <MapPin className="h-4 w-4 inline mr-1" />
-                      Delivery Address *
-                    </label>
-                    <textarea
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      required
-                      rows={3}
-                      className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
-                        errors.address ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="Enter your full delivery address"
-                      maxLength={500}
-                    />
-                    {errors.address && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {errors.address}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      <Phone className="h-4 w-4 inline mr-1" />
-                      Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.codPhone}
-                      onChange={(e) => handleInputChange('codPhone', e.target.value)}
-                      required
-                      pattern="01[3-9][0-9]{8}"
-                      maxLength={11}
-                      className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
-                        errors.codPhone ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                      placeholder="01XXXXXXXXX"
-                    />
-                    {errors.codPhone && (
-                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {errors.codPhone}
-                      </p>
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <Phone className="h-4 w-4 inline mr-1" />
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.codPhone}
+                    onChange={(e) => handleInputChange('codPhone', e.target.value)}
+                    required
+                    pattern="01[3-9][0-9]{8}"
+                    maxLength={11}
+                    className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base ${
+                      errors.codPhone ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="01XXXXXXXXX"
+                  />
+                  {errors.codPhone && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors.codPhone}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">

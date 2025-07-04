@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, Menu, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -211,7 +212,12 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-3">
+              <img 
+                src="/lovable-uploads/a8b8701a-7028-4152-bfc6-171ff21d753d.png" 
+                alt="Tea Time Logo" 
+                className="h-10 w-10"
+              />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                 Tea Time
               </h1>
