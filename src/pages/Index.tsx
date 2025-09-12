@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Menu, X } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { Product, CartItem, Order, PaymentData } from '../types';
 import { initialProducts } from '../data/products';
@@ -11,16 +11,20 @@ import CartModal from '../components/CartModal';
 import PaymentModal from '../components/PaymentModal';
 import OrderHistory from '../components/OrderHistory';
 import AdminPanel from '../components/AdminPanel';
+import CategorySidebar from '../components/CategorySidebar';
+import ResponsiveGrid from '../components/ResponsiveGrid';
 
 const Index = () => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCategorySidebarOpen, setIsCategorySidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Load data from localStorage on mount
@@ -87,30 +91,84 @@ const Index = () => {
   };
 
   const addToCart = (productId: number) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    // This would normally be handled by backend API
+    const quantity = product.unit === 'kg' ? 0.5 : 1;
+    const unitPrice = product.base_price_per_kg;
+    const totalPrice = unitPrice * quantity;
+
     const existingItem = cart.find(item => item.productId === productId);
     
     if (existingItem) {
       setCart(cart.map(item =>
         item.productId === productId
-          ? { ...item, quantity: item.quantity + 1 }
+          ? { 
+              ...item, 
+              quantity: item.quantity + quantity,
+              totalPriceAtTime: item.totalPriceAtTime + totalPrice
+            }
           : item
       ));
     } else {
-      setCart([...cart, { productId, quantity: 1 }]);
+      setCart([...cart, { 
+        productId, 
+        quantity,
+        unit: product.unit,
+        unitPriceAtTime: unitPrice,
+        totalPriceAtTime: totalPrice
+      }]);
+    }
+    
+    toast.success('Product added to cart!');
+  };
+
+  const addToCartWithQuantity = (productId: number, quantity: number, totalPrice: number) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    const unitPrice = product.base_price_per_kg;
+    const existingItem = cart.find(item => item.productId === productId);
+    
+    if (existingItem) {
+      setCart(cart.map(item =>
+        item.productId === productId
+          ? { 
+              ...item, 
+              quantity: item.quantity + quantity,
+              totalPriceAtTime: item.totalPriceAtTime + totalPrice
+            }
+          : item
+      ));
+    } else {
+      setCart([...cart, { 
+        productId, 
+        quantity,
+        unit: product.unit,
+        unitPriceAtTime: unitPrice,
+        totalPriceAtTime: totalPrice
+      }]);
     }
     
     toast.success('Product added to cart!');
   };
 
   const updateCartQuantity = (productId: number, quantity: number) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
     if (quantity <= 0) {
       removeFromCart(productId);
       return;
     }
     
+    const unitPrice = product.base_price_per_kg;
+    const totalPrice = unitPrice * quantity;
+    
     setCart(cart.map(item =>
       item.productId === productId
-        ? { ...item, quantity }
+        ? { ...item, quantity, totalPriceAtTime: totalPrice }
         : item
     ));
   };
@@ -125,10 +183,7 @@ const Index = () => {
   };
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => {
-      const product = products.find(p => p.id === item.productId);
-      return total + (product ? product.price * item.quantity : 0);
-    }, 0);
+    return cart.reduce((total, item) => total + item.totalPriceAtTime, 0);
   };
 
   const getCartItemCount = () => {
@@ -141,7 +196,9 @@ const Index = () => {
       return {
         name: product?.name || 'Unknown Product',
         quantity: item.quantity,
-        price: product?.price || 0
+        unit: item.unit,
+        unitPrice: item.unitPriceAtTime,
+        totalPrice: item.totalPriceAtTime
       };
     });
 
@@ -177,7 +234,12 @@ const Index = () => {
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category?.toLowerCase().includes(searchQuery.toLowerCase())
       )
+    : selectedCategory
+    ? products.filter(product => product.category === selectedCategory)
     : products;
+
+  // Get unique categories
+  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
 
   const handleAdminLogin = (credentials: { username: string; password: string }) => {
     // Security: Simple authentication (in production, use proper backend authentication)
@@ -254,6 +316,14 @@ const Index = () => {
 
             {/* Cart and Mobile Menu */}
             <div className="flex items-center space-x-4">
+              {/* Filter Button (Mobile) */}
+              <button
+                onClick={() => setIsCategorySidebarOpen(true)}
+                className="md:hidden p-2 text-gray-700 hover:text-amber-600 transition-colors"
+              >
+                <Filter className="h-6 w-6" />
+              </button>
+
               {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
@@ -341,23 +411,65 @@ const Index = () => {
               Discover our finest tea selections from the gardens of Sreemangal
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <div key={product.id} id={`product-${product.id}`}>
-                <ProductCard
-                  product={product}
-                  onAddToCart={() => addToCart(product.id)}
-                />
-              </div>
-            ))}
-          </div>
-          
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No products found</p>
+
+          <div className="flex gap-8">
+            {/* Desktop Category Sidebar */}
+            <div className="hidden lg:block">
+              <CategorySidebar
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onCategorySelect={setSelectedCategory}
+                isOpen={true}
+                onClose={() => {}}
+              />
             </div>
-          )}
+
+            {/* Products Grid */}
+            <div className="flex-1">
+              {selectedCategory && (
+                <div className="mb-6 flex items-center gap-2">
+                  <span className="text-gray-600">Showing products in:</span>
+                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                    {selectedCategory}
+                  </span>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="text-gray-500 hover:text-gray-700 ml-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              
+              <ResponsiveGrid cols={{ default: 1, sm: 2, md: 2, lg: 2, xl: 3 }}>
+                {filteredProducts.map((product) => (
+                  <div key={product.id} id={`product-${product.id}`}>
+                    <ProductCard
+                      product={product}
+                      onAddToCart={(quantity, totalPrice) => addToCartWithQuantity(product.id, quantity, totalPrice)}
+                    />
+                  </div>
+                ))}
+              </ResponsiveGrid>
+              
+              {filteredProducts.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">No products found</p>
+                  {(searchQuery || selectedCategory) && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory(null);
+                      }}
+                      className="mt-4 text-green-600 hover:text-green-700 font-medium"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -433,6 +545,15 @@ const Index = () => {
       </footer>
 
       {/* Modals */}
+      {/* Mobile Category Sidebar */}
+      <CategorySidebar
+        categories={categories}
+        selectedCategory={selectedCategory}
+        onCategorySelect={setSelectedCategory}
+        isOpen={isCategorySidebarOpen}
+        onClose={() => setIsCategorySidebarOpen(false)}
+      />
+
       <CartModal
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}

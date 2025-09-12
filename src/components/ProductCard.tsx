@@ -1,15 +1,45 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: () => void;
+  onAddToCart: (quantity: number, totalPrice: number) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
-  const discount = Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100);
+  const [quantity, setQuantity] = useState<number>(product.unit === 'kg' ? 0.5 : 1);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+
+  const discount = product.old_price_per_kg 
+    ? Math.round(((product.old_price_per_kg - product.base_price_per_kg) / product.old_price_per_kg) * 100)
+    : 0;
+
+  // Update total price when quantity changes
+  useEffect(() => {
+    setTotalPrice(product.base_price_per_kg * quantity);
+  }, [quantity, product.base_price_per_kg]);
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value) || 0;
+    setQuantity(value);
+  };
+
+  const handleAddToCart = () => {
+    if (quantity > 0) {
+      onAddToCart(quantity, totalPrice);
+    }
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-BD', {
+      style: 'currency',
+      currency: 'BDT',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(price).replace('BDT', '৳');
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
@@ -49,14 +79,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           <span className="text-sm text-gray-500 ml-1">(4.8)</span>
         </div>
         
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-green-600">
-              ৳{product.price}
+        {/* Price per unit */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg font-bold text-green-600">
+              {formatPrice(product.base_price_per_kg)}
             </span>
-            {product.oldPrice > product.price && (
+            <span className="text-sm text-gray-500">per {product.unit}</span>
+            {product.old_price_per_kg && product.old_price_per_kg > product.base_price_per_kg && (
               <span className="text-sm text-gray-400 line-through">
-                ৳{product.oldPrice}
+                {formatPrice(product.old_price_per_kg)}
               </span>
             )}
           </div>
@@ -67,13 +99,39 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
           )}
         </div>
         
+        {/* Quantity Input */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Quantity ({product.unit})
+          </label>
+          <input
+            type="number"
+            min={product.unit === 'kg' ? '0.1' : '1'}
+            step={product.unit === 'kg' ? '0.1' : '1'}
+            value={quantity}
+            onChange={handleQuantityChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder={`Enter ${product.unit}`}
+          />
+        </div>
+
+        {/* Total Price */}
+        <div className="mb-4 p-3 bg-green-50 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium text-gray-700">Total Price:</span>
+            <span className="text-xl font-bold text-green-600">
+              {formatPrice(totalPrice)}
+            </span>
+          </div>
+        </div>
+        
         <button
-          onClick={onAddToCart}
+          onClick={handleAddToCart}
           disabled={!product.inStock}
           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-green-600 disabled:hover:to-emerald-600"
         >
           <ShoppingCart className="h-4 w-4" />
-          {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+          {product.inStock ? (quantity > 0 ? 'Add to Cart' : 'Enter Quantity') : 'Out of Stock'}
         </button>
       </div>
     </div>

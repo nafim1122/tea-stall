@@ -2,8 +2,9 @@
 export interface Product {
   id: number;
   name: string;
-  price: number;
-  oldPrice: number;
+  base_price_per_kg: number;
+  old_price_per_kg?: number;
+  unit: 'kg' | 'piece';
   img: string;
   description?: string;
   category?: string;
@@ -12,13 +13,18 @@ export interface Product {
 
 export interface CartItem {
   productId: number;
-  quantity: number;
+  quantity: number; // in kg or pieces
+  unit: 'kg' | 'piece';
+  unitPriceAtTime: number;
+  totalPriceAtTime: number;
 }
 
 export interface OrderItem {
   name: string;
   quantity: number;
-  price: number;
+  unit: 'kg' | 'piece';
+  unitPrice: number;
+  totalPrice: number;
 }
 
 export interface Order {

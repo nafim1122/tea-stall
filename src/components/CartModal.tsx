@@ -31,6 +31,15 @@ const CartModal: React.FC<CartModalProps> = ({
     product: products.find(p => p.id === item.productId)!
   }));
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-BD', {
+      style: 'currency',
+      currency: 'BDT',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(price).replace('BDT', '৳');
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
       <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col animate-slide-in-right">
@@ -58,7 +67,7 @@ const CartModal: React.FC<CartModalProps> = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {cartWithProducts.map(({ productId, quantity, product }) => (
+              {cartWithProducts.map(({ productId, quantity, product, unitPriceAtTime, totalPriceAtTime, unit }) => (
                 <div key={productId} className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-start gap-4">
                     <img
@@ -70,24 +79,27 @@ const CartModal: React.FC<CartModalProps> = ({
                       <h3 className="font-semibold text-gray-800 mb-1 line-clamp-2">
                         {product.name}
                       </h3>
-                      <p className="text-green-600 font-semibold mb-2">
-                        ৳{product.price} each
+                      <p className="text-green-600 font-semibold mb-1">
+                        {formatPrice(unitPriceAtTime)} per {unit}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {quantity} {unit} × {formatPrice(unitPriceAtTime)}
                       </p>
                       
                       {/* Quantity Controls */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => onUpdateQuantity(productId, quantity - 1)}
+                            onClick={() => onUpdateQuantity(productId, quantity - (unit === 'kg' ? 0.1 : 1))}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                           >
                             <Minus className="h-4 w-4 text-gray-600" />
                           </button>
                           <span className="font-semibold px-3 py-1 bg-white rounded-lg min-w-[3rem] text-center">
-                            {quantity}
+                            {quantity} {unit}
                           </span>
                           <button
-                            onClick={() => onUpdateQuantity(productId, quantity + 1)}
+                            onClick={() => onUpdateQuantity(productId, quantity + (unit === 'kg' ? 0.1 : 1))}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
                           >
                             <Plus className="h-4 w-4 text-gray-600" />
@@ -105,7 +117,7 @@ const CartModal: React.FC<CartModalProps> = ({
                       {/* Subtotal */}
                       <div className="text-right mt-2">
                         <span className="text-lg font-bold text-gray-800">
-                          ৳{product.price * quantity}
+                          {formatPrice(totalPriceAtTime)}
                         </span>
                       </div>
                     </div>
@@ -121,7 +133,7 @@ const CartModal: React.FC<CartModalProps> = ({
           <div className="border-t border-gray-200 p-6 space-y-4">
             <div className="flex justify-between items-center text-xl font-bold">
               <span>Total:</span>
-              <span className="text-green-600">৳{total}</span>
+              <span className="text-green-600">{formatPrice(total)}</span>
             </div>
             <button
               onClick={onCheckout}

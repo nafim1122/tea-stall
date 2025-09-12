@@ -26,8 +26,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
-    price: 0,
-    oldPrice: 0,
+    base_price_per_kg: 0,
+    old_price_per_kg: 0,
+    unit: 'kg' as 'kg' | 'piece',
     img: '',
     description: '',
     category: '',
@@ -43,7 +44,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProduct.name || !newProduct.price || !newProduct.img) {
+    if (!newProduct.name || !newProduct.base_price_per_kg || !newProduct.img) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -51,8 +52,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     const productToAdd: Product = {
       id: Date.now(),
       name: newProduct.name,
-      price: newProduct.price,
-      oldPrice: newProduct.oldPrice,
+      base_price_per_kg: newProduct.base_price_per_kg,
+      old_price_per_kg: newProduct.old_price_per_kg,
+      unit: newProduct.unit,
       img: newProduct.img,
       description: newProduct.description,
       category: newProduct.category,
@@ -67,8 +69,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     // Reset form
     setNewProduct({
       name: '',
-      price: 0,
-      oldPrice: 0,
+      base_price_per_kg: 0,
+      old_price_per_kg: 0,
+      unit: 'kg',
       img: '',
       description: '',
       category: '',
@@ -315,21 +318,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       />
                       <input
                         type="number"
-                        placeholder="Price"
-                        value={newProduct.price || ''}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, price: Number(e.target.value) }))}
+                        placeholder="Base Price per Kg/Piece"
+                        value={newProduct.base_price_per_kg || ''}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, base_price_per_kg: Number(e.target.value) }))}
                         required
                         min="1"
+                        step="0.01"
                         className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
                       <input
                         type="number"
-                        placeholder="Old Price"
-                        value={newProduct.oldPrice || ''}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, oldPrice: Number(e.target.value) }))}
+                        placeholder="Old Price (Optional)"
+                        value={newProduct.old_price_per_kg || ''}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, old_price_per_kg: Number(e.target.value) }))}
                         min="1"
+                        step="0.01"
                         className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
+                      <select
+                        value={newProduct.unit}
+                        onChange={(e) => setNewProduct(prev => ({ ...prev, unit: e.target.value as 'kg' | 'piece' }))}
+                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="kg">Per Kg</option>
+                        <option value="piece">Per Piece</option>
+                      </select>
                       <input
                         type="url"
                         placeholder="Image URL"
@@ -370,8 +383,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                           <tr>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Image</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Price</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Old Price</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Base Price</th>
+                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Unit</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stock</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
@@ -384,8 +397,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <img src={product.img} alt={product.name} className="w-12 h-12 object-cover rounded" />
                               </td>
                               <td className="px-4 py-3 text-sm font-medium">{product.name}</td>
-                              <td className="px-4 py-3 text-sm text-green-600 font-semibold">৳{product.price}</td>
-                              <td className="px-4 py-3 text-sm text-gray-500">৳{product.oldPrice}</td>
+                              <td className="px-4 py-3 text-sm text-green-600 font-semibold">৳{product.base_price_per_kg}</td>
+                              <td className="px-4 py-3 text-sm">{product.unit}</td>
                               <td className="px-4 py-3 text-sm">{product.category || 'N/A'}</td>
                               <td className="px-4 py-3 text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
@@ -504,21 +517,31 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                 />
                 <input
                   type="number"
-                  placeholder="Price"
-                  value={editingProduct.price}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, price: Number(e.target.value) } : null)}
+                  placeholder="Base Price per Kg/Piece"
+                  value={editingProduct.base_price_per_kg}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, base_price_per_kg: Number(e.target.value) } : null)}
                   required
                   min="1"
+                  step="0.01"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <input
                   type="number"
-                  placeholder="Old Price"
-                  value={editingProduct.oldPrice}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, oldPrice: Number(e.target.value) } : null)}
+                  placeholder="Old Price (Optional)"
+                  value={editingProduct.old_price_per_kg || ''}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, old_price_per_kg: Number(e.target.value) } : null)}
                   min="1"
+                  step="0.01"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
+                <select
+                  value={editingProduct.unit}
+                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, unit: e.target.value as 'kg' | 'piece' } : null)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="kg">Per Kg</option>
+                  <option value="piece">Per Piece</option>
+                </select>
                 <input
                   type="url"
                   placeholder="Image URL"

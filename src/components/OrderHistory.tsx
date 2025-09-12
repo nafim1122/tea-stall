@@ -8,6 +8,15 @@ interface OrderHistoryProps {
 }
 
 const OrderHistory: React.FC<OrderHistoryProps> = ({ orders }) => {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-BD', {
+      style: 'currency',
+      currency: 'BDT',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(price).replace('BDT', '৳');
+  };
+
   if (orders.length === 0) {
     return (
       <section className="py-16 bg-white/50">
@@ -52,7 +61,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ orders }) => {
                   </div>
                   
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-green-600">৳{order.total}</div>
+                    <div className="text-2xl font-bold text-green-600">{formatPrice(order.total)}</div>
                     <div className="flex items-center gap-1 text-sm text-gray-600">
                       <CreditCard className="h-4 w-4" />
                       <span>{order.paymentMethod}</span>
@@ -68,11 +77,13 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ orders }) => {
                   {order.items.map((item, index) => (
                     <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                       <div className="flex-1">
-                        <span className="font-medium text-gray-800">{item.name}</span>
-                        <span className="text-gray-500 ml-2">× {item.quantity}</span>
+                        <div className="font-medium text-gray-800">{item.name}</div>
+                        <div className="text-sm text-gray-500">
+                          {item.quantity} {item.unit} × {formatPrice(item.unitPrice)}
+                        </div>
                       </div>
                       <div className="font-semibold text-green-600">
-                        ৳{item.price * item.quantity}
+                        {formatPrice(item.totalPrice)}
                       </div>
                     </div>
                   ))}
