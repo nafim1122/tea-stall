@@ -31,7 +31,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     unit: 'kg' as 'kg' | 'piece',
     img: '',
     description: '',
-    category: '',
     inStock: true
   });
 
@@ -57,7 +56,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       unit: newProduct.unit,
       img: newProduct.img,
       description: newProduct.description,
-      category: newProduct.category,
       inStock: newProduct.inStock
     };
 
@@ -74,7 +72,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       unit: 'kg',
       img: '',
       description: '',
-      category: '',
       inStock: true
     });
     
@@ -357,13 +354,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                       />
                       <input
                         type="text"
-                        placeholder="Category"
-                        value={newProduct.category}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                      <input
-                        type="text"
                         placeholder="Description"
                         value={newProduct.description}
                         onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
@@ -389,7 +379,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Base Price</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Unit</th>
-                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Stock</th>
                             <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                           </tr>
@@ -403,7 +392,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                               <td className="px-4 py-3 text-sm font-medium">{product.name}</td>
                               <td className="px-4 py-3 text-sm text-green-600 font-semibold">৳{product.base_price_per_kg}</td>
                               <td className="px-4 py-3 text-sm">{product.unit}</td>
-                              <td className="px-4 py-3 text-sm">{product.category || 'N/A'}</td>
                               <td className="px-4 py-3 text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs ${
                                   product.inStock ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -560,13 +548,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   value={editingProduct.img}
                   onChange={(e) => setEditingProduct(prev => prev ? { ...prev, img: e.target.value } : null)}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Category"
-                  value={editingProduct.category || ''}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, category: e.target.value } : null)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <textarea

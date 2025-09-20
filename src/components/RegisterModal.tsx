@@ -107,7 +107,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({
           </div>
           <div className="relative flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-1">Join Tea Time</h2>
+              <h2 className="text-2xl font-bold mb-1">Join Tea Stall</h2>
               <p className="text-emerald-100">Create your tea garden account</p>
             </div>
             <button

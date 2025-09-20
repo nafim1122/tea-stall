@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Menu, X, Filter, User } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Product, CartItem, Order, PaymentData } from '../types';
 import { initialProducts } from '../data/products';
@@ -12,7 +12,6 @@ import CartModal from '../components/CartModal';
 import PaymentModal from '../components/PaymentModal';
 import OrderHistory from '../components/OrderHistory';
 import AdminPanel from '../components/AdminPanel';
-import CategorySidebar from '../components/CategorySidebar';
 import ResponsiveGrid from '../components/ResponsiveGrid';
 import LoginModal from '../components/LoginModal';
 import RegisterModal from '../components/RegisterModal';
@@ -24,12 +23,10 @@ const Index = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCategorySidebarOpen, setIsCategorySidebarOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -241,15 +238,9 @@ const Index = () => {
 
   const filteredProducts = searchQuery
     ? products.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category?.toLowerCase().includes(searchQuery.toLowerCase())
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : selectedCategory
-    ? products.filter(product => product.category === selectedCategory)
     : products;
-
-  // Get unique categories
-  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))) as string[];
 
   const handleAdminLogin = (credentials: { username: string; password: string }) => {
     // Security: Simple authentication (in production, use proper backend authentication)
@@ -317,13 +308,11 @@ const Index = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/a8b8701a-7028-4152-bfc6-171ff21d753d.png" 
-                alt="Tea Time Logo" 
-                className="h-10 w-10"
-              />
+              <div className="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-xl">🍵</span>
+              </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                Tea Time
+                Tea Stall
               </h1>
             </div>
 
@@ -388,16 +377,6 @@ const Index = () => {
 
             {/* Cart and Mobile Menu */}
             <div className="flex items-center space-x-4">
-              {/* Filter Button (Mobile) */}
-              <button
-                onClick={() => setIsCategorySidebarOpen(true)}
-                className="md:hidden p-2 text-gray-700 hover:text-amber-600 transition-colors"
-                title="Open category filter"
-                aria-label="Open category filter"
-              >
-                <Filter className="h-6 w-6" />
-              </button>
-
               {/* Cart Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
@@ -527,36 +506,8 @@ const Index = () => {
           </div>
 
           <div className="flex gap-8">
-            {/* Desktop Category Sidebar */}
-            <div className="hidden lg:block">
-              <CategorySidebar
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onCategorySelect={setSelectedCategory}
-                isOpen={true}
-                onClose={() => {}}
-              />
-            </div>
-
             {/* Products Grid */}
             <div className="flex-1">
-              {selectedCategory && (
-                <div className="mb-6 flex items-center gap-2">
-                  <span className="text-gray-600">Showing products in:</span>
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    {selectedCategory}
-                  </span>
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className="text-gray-500 hover:text-gray-700 ml-2"
-                    title="Clear category filter"
-                    aria-label="Clear category filter"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-              
               <ResponsiveGrid cols={{ default: 1, sm: 2, md: 2, lg: 2, xl: 3 }}>
                 {filteredProducts.map((product) => (
                   <div key={product.id} id={`product-${product.id}`}>
@@ -571,11 +522,10 @@ const Index = () => {
               {filteredProducts.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No products found</p>
-                  {(searchQuery || selectedCategory) && (
+                  {searchQuery && (
                     <button
                       onClick={() => {
                         setSearchQuery('');
-                        setSelectedCategory(null);
                       }}
                       className="mt-4 text-green-600 hover:text-green-700 font-medium"
                     >
@@ -593,11 +543,11 @@ const Index = () => {
       <section id="about" className="py-16 bg-gradient-to-r from-amber-50 to-orange-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-            About Tea Time
+            About Tea Stall
           </h2>
           <div className="prose prose-lg max-w-none text-gray-700">
             <p className="mb-4">
-              Welcome to Tea Time, your one-stop destination for the finest tea straight from 
+              Welcome to Tea Stall, your one-stop destination for the finest tea straight from 
               the heart of Sreemangal, the tea capital of Bangladesh. We are passionate about 
               delivering premium-quality tea leaves, blends, and accessories directly from the 
               gardens to your doorstep.
@@ -611,7 +561,7 @@ const Index = () => {
             <div className="bg-white/70 rounded-lg p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-amber-800 mb-4">Contact Information</h3>
               <div className="space-y-2 text-left max-w-md mx-auto">
-                <p><strong>Business Name:</strong> Tea Time</p>
+                <p><strong>Business Name:</strong> Tea Stall</p>
                 <p><strong>Phone Numbers:</strong></p>
                 <ul className="ml-4 space-y-1">
                   <li>📞 <a href="tel:+8801742236623" className="text-amber-600 hover:text-amber-700">+880 1742-236623</a></li>
@@ -632,7 +582,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">Tea Time</h3>
+              <h3 className="text-xl font-bold mb-4">Tea Stall</h3>
               <p className="text-gray-300">
                 Your trusted source for premium tea from Sreemangal, Bangladesh.
               </p>
@@ -655,21 +605,12 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
-            <p>&copy; 2024 Tea Time. All rights reserved.</p>
+            <p>&copy; 2024 Tea Stall. All rights reserved.</p>
           </div>
         </div>
       </footer>
 
       {/* Modals */}
-      {/* Mobile Category Sidebar */}
-      <CategorySidebar
-        categories={categories}
-        selectedCategory={selectedCategory}
-        onCategorySelect={setSelectedCategory}
-        isOpen={isCategorySidebarOpen}
-        onClose={() => setIsCategorySidebarOpen(false)}
-      />
-
       <CartModal
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}

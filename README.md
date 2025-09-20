@@ -1,69 +1,111 @@
 # Tea Stall Management System
 
-## How can I edit this code?
+A modern e-commerce web application for managing tea stall operations, built with React and TypeScript.
 
-There are several ways of editing your application.
+## Features
 
-### Use Lovable
+- **Product Management**: Browse and search through various tea products
+- **Shopping Cart**: Add items with flexible quantity options (kg/piece)
+- **Order Processing**: Complete ordering system with multiple payment methods
+- **Responsive Design**: Mobile-friendly interface using Tailwind CSS
+- **Modern UI**: Clean, intuitive design with shadcn-ui components
 
-Simply visit the and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-### Use your preferred IDE
+- Node.js (v16 or higher)
+- npm or yarn package manager
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+1. **Clone the repository**
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
+cd tea-stall
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. **Install dependencies**
+```sh
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+3. **Start the development server**
+```sh
 npm run dev
 ```
 
-### Edit a file directly in GitHub
+4. **Open your browser**
+Navigate to `http://localhost:8080` to view the application.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Backend Setup
 
-### Use GitHub Codespaces
+To run the full application with backend functionality:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1. **Navigate to backend directory**
+```sh
+cd backend
+```
 
-## What technologies are used for this project?
+2. **Install backend dependencies**
+```sh
+npm install
+```
+
+3. **Set up environment variables**
+```sh
+cp .env.example .env
+# Edit .env with your MongoDB configuration
+```
+
+4. **Start the backend server**
+```sh
+npm run dev
+```
+
+## Project Structure
+
+```
+tea-stall/
+├── src/
+│   ├── components/     # React components
+│   ├── pages/         # Page components
+│   ├── hooks/         # Custom React hooks
+│   ├── services/      # API services
+│   ├── types/         # TypeScript type definitions
+│   └── lib/           # Utility functions
+├── backend/           # Node.js/Express backend
+├── public/            # Static assets
+└── docs/              # Documentation
+```
+
+## Technologies Used
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and building
+- **Styling**: Tailwind CSS for utility-first styling
+- **UI Components**: shadcn-ui for modern, accessible components
+- **Backend**: Node.js with Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT-based authentication system
 
-## How can I deploy this project?
+## Available Scripts
 
-Simply open [Lovable](https://lovable.dev/projects/05d7d2ea-512f-4478-869e-02fe51b02885) and click on Share -> Publish.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint for code linting
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License.

@@ -1,6 +1,6 @@
-# Tea Time Backend API
+# Tea Stall Backend API
 
-A Node.js/Express backend for the Tea Time e-commerce platform with price-per-kg functionality.
+A Node.js/Express backend for the Tea Stall e-commerce platform with price-per-kg functionality.
 
 ## Features
 
@@ -145,7 +145,7 @@ npm start
 ## Environment Variables
 
 ```env
-MONGODB_URI=mongodb://localhost:27017/teatime
+MONGODB_URI=mongodb://localhost:27017/teastall
 PORT=5000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000

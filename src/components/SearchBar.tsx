@@ -28,8 +28,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (product.category && product.category.toLowerCase().includes(searchQuery.toLowerCase()))
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, 8); // Limit suggestions for performance
 
   useEffect(() => {
@@ -150,6 +149,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onClick={handleClearSearch}
             className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-gray-600 transition-colors"
             type="button"
+            title="Clear search"
+            aria-label="Clear search"
           >
             <X className="h-4 w-4 text-gray-400" />
           </button>
@@ -184,12 +185,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   {product.name}
                 </div>
                 <div className="text-xs sm:text-sm text-green-600 font-semibold">
-                  ৳{product.price}
-                  {product.category && (
-                    <span className="ml-2 text-gray-500">
-                      in {product.category}
-                    </span>
-                  )}
+                  ৳{product.base_price_per_kg}
                 </div>
               </div>
             </button>
