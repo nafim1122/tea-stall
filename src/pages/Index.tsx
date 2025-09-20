@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, Menu, X, Filter } from 'lucide-react';
+import { ShoppingCart, Search, Menu, X, Filter, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Product, CartItem, Order, PaymentData } from '../types';
 import { initialProducts } from '../data/products';
+import { useAuth } from '../hooks/useAuth';
 import ProductCard from '../components/ProductCard';
 import SearchBar from '../components/SearchBar';
 import HeroSection from '../components/HeroSection';
@@ -13,8 +14,12 @@ import OrderHistory from '../components/OrderHistory';
 import AdminPanel from '../components/AdminPanel';
 import CategorySidebar from '../components/CategorySidebar';
 import ResponsiveGrid from '../components/ResponsiveGrid';
+import LoginModal from '../components/LoginModal';
+import RegisterModal from '../components/RegisterModal';
+import ProfileModal from '../components/ProfileModal';
 
 const Index = () => {
+  const { user, isAuthenticated, logout } = useAuth();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -25,7 +30,12 @@ const Index = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategorySidebarOpen, setIsCategorySidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
+  // Legacy authentication state for admin panel backwards compatibility
+  const [isAuthenticated_legacy, setIsAuthenticated_legacy] = useState(false);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -247,11 +257,43 @@ const Index = () => {
     const sanitizedPassword = sanitizeInput(credentials.password);
     
     if (sanitizedUsername === 'admin' && sanitizedPassword === 'admin123') {
-      setIsAuthenticated(true);
+      setIsAuthenticated_legacy(true);
       toast.success('Admin login successful');
     } else {
       toast.error('Invalid credentials');
     }
+  };
+
+  // Auth modal handlers
+  const handleLoginClick = () => {
+    setIsLoginOpen(true);
+  };
+
+  const handleRegisterClick = () => {
+    setIsRegisterOpen(true);
+  };
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(true);
+  };
+
+  const handleAdminClick = () => {
+    if (isAuthenticated && user?.role === 'admin') {
+      setIsAdminOpen(true);
+    } else {
+      toast.error('Admin access required. Please log in as an administrator.');
+      setIsLoginOpen(true);
+    }
+  };
+
+  const switchToRegister = () => {
+    setIsLoginOpen(false);
+    setIsRegisterOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterOpen(false);
+    setIsLoginOpen(true);
   };
 
   // Close mobile menu when clicking outside
@@ -296,12 +338,42 @@ const Index = () => {
               <a href="#about" className="text-gray-700 hover:text-amber-600 font-medium transition-colors">
                 About
               </a>
-              <button
-                onClick={() => setIsAdminOpen(true)}
-                className="text-red-600 hover:text-red-700 font-medium transition-colors"
-              >
-                Admin
-              </button>
+              {isAuthenticated && user?.role === 'admin' && (
+                <button
+                  onClick={handleAdminClick}
+                  className="text-red-600 hover:text-red-700 font-medium transition-colors"
+                >
+                  Admin
+                </button>
+              )}
+              
+              {/* Authentication Buttons */}
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleProfileClick}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-green-600 font-medium transition-colors"
+                  >
+                    <User className="h-4 w-4" />
+                    <span className="hidden lg:inline">{user?.name}</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleLoginClick}
+                    className="text-green-600 hover:text-green-700 font-medium transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={handleRegisterClick}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Desktop Search */}
@@ -320,6 +392,8 @@ const Index = () => {
               <button
                 onClick={() => setIsCategorySidebarOpen(true)}
                 className="md:hidden p-2 text-gray-700 hover:text-amber-600 transition-colors"
+                title="Open category filter"
+                aria-label="Open category filter"
               >
                 <Filter className="h-6 w-6" />
               </button>
@@ -341,6 +415,8 @@ const Index = () => {
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="md:hidden p-2 text-gray-700 hover:text-amber-600 transition-colors mobile-menu-container"
+                title={isMobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               >
                 {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
@@ -383,15 +459,53 @@ const Index = () => {
               >
                 About
               </a>
-              <button
-                onClick={() => {
-                  setIsAdminOpen(true);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="block w-full text-left px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-              >
-                Admin
-              </button>
+              
+              {/* Mobile Auth Buttons */}
+              {isAuthenticated ? (
+                <>
+                  <button
+                    onClick={() => {
+                      handleProfileClick();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
+                  >
+                    My Profile ({user?.name})
+                  </button>
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        handleAdminClick();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                    >
+                      Admin Dashboard
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      handleLoginClick();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleRegisterClick();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors font-medium"
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -435,6 +549,8 @@ const Index = () => {
                   <button
                     onClick={() => setSelectedCategory(null)}
                     className="text-gray-500 hover:text-gray-700 ml-2"
+                    title="Clear category filter"
+                    aria-label="Clear category filter"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -573,6 +689,32 @@ const Index = () => {
         onClose={() => setIsPaymentOpen(false)}
         total={getCartTotal()}
         onOrderComplete={handleOrderComplete}
+        onLoginRequired={() => {
+          setIsPaymentOpen(false);
+          setIsLoginOpen(true);
+        }}
+        onRegisterRequired={() => {
+          setIsPaymentOpen(false);
+          setIsRegisterOpen(true);
+        }}
+      />
+
+      {/* Authentication Modals */}
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onSwitchToRegister={switchToRegister}
+      />
+
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onSwitchToLogin={switchToLogin}
+      />
+
+      <ProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
       />
 
       <AdminPanel
@@ -581,7 +723,7 @@ const Index = () => {
         products={products}
         orders={orders}
         onLogin={handleAdminLogin}
-        isAuthenticated={isAuthenticated}
+        isAuthenticated={isAuthenticated_legacy}
       />
     </div>
   );

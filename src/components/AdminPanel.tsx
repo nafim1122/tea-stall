@@ -134,6 +134,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
           <button
             onClick={resetAndClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Close admin panel"
+            aria-label="Close admin panel"
           >
             <X className="h-6 w-6 text-gray-600" />
           </button>
@@ -339,6 +341,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                         value={newProduct.unit}
                         onChange={(e) => setNewProduct(prev => ({ ...prev, unit: e.target.value as 'kg' | 'piece' }))}
                         className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        title="Select pricing unit"
+                        aria-label="Select pricing unit"
                       >
                         <option value="kg">Per Kg</option>
                         <option value="piece">Per Piece</option>
@@ -412,12 +416,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                                   <button
                                     onClick={() => setEditingProduct(product)}
                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    title="Edit product"
+                                    aria-label="Edit product"
                                   >
                                     <Edit className="h-4 w-4" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteProduct(product.id)}
                                     className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    title="Delete product"
+                                    aria-label="Delete product"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
@@ -502,6 +510,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                 <button
                   onClick={() => setEditingProduct(null)}
                   className="p-1 hover:bg-gray-100 rounded"
+                  title="Close edit dialog"
+                  aria-label="Close edit dialog"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -538,6 +548,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   value={editingProduct.unit}
                   onChange={(e) => setEditingProduct(prev => prev ? { ...prev, unit: e.target.value as 'kg' | 'piece' } : null)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  title="Select pricing unit"
+                  aria-label="Select pricing unit"
                 >
                   <option value="kg">Per Kg</option>
                   <option value="piece">Per Piece</option>

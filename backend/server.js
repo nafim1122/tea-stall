@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
@@ -54,6 +56,45 @@ const productSchema = new mongoose.Schema({
 
 const Product = mongoose.model('Product', productSchema);
 
+// User Schema
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+  password: { type: String, required: true, minlength: 6 },
+  phone: { type: String, required: true, trim: true },
+  role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+// Hash password before saving
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Compare password method
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Remove password from JSON output
+userSchema.methods.toJSON = function() {
+  const user = this.toObject();
+  delete user.password;
+  return user;
+};
+
+const User = mongoose.model('User', userSchema);
+
 // Cart Schema
 const cartItemSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
@@ -88,7 +129,124 @@ const orderSchema = new mongoose.Schema({
 
 const Order = mongoose.model('Order', orderSchema);
 
+// JWT configuration
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+// Generate JWT token
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+};
+
+// Authentication middleware
+const authenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Access denied. No token provided.' });
+    }
+    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user || !user.isActive) {
+      return res.status(401).json({ error: 'Invalid token or user not found.' });
+    }
+    
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    res.status(401).json({ error: 'Invalid token.' });
+  }
+};
+
+// Admin middleware
+const requireAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Access denied. Admin privileges required.' });
+  }
+};
+
+// Create default admin user if it doesn't exist
+const createDefaultAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (!adminExists) {
+      const defaultAdmin = new User({
+        name: 'Tea Stall Admin',
+        email: 'admin@teatime.com',
+        password: 'admin123', // This will be hashed by the pre-save hook
+        phone: '+8801742236623',
+        role: 'admin'
+      });
+      await defaultAdmin.save();
+      console.log('Default admin user created: admin@teatime.com / admin123');
+    }
+  } catch (error) {
+    console.error('Error creating default admin:', error);
+  }
+};
+
+// Initialize default admin
+createDefaultAdmin();
+
 // Validation middleware
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhone = (phone) => {
+  const phoneRegex = /^[\+]?[0-9\-\(\)\s]{10,20}$/;
+  return phoneRegex.test(phone);
+};
+
+const validatePassword = (password) => {
+  return password && password.length >= 6;
+};
+
+const validateRegisterData = (req, res, next) => {
+  const { name, email, password, phone } = req.body;
+  
+  if (!name || !email || !password || !phone) {
+    return res.status(400).json({ 
+      error: 'Missing required fields: name, email, password, phone' 
+    });
+  }
+  
+  if (!validateEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+  
+  if (!validatePassword(password)) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+  }
+  
+  if (!validatePhone(phone)) {
+    return res.status(400).json({ error: 'Invalid phone number format' });
+  }
+  
+  next();
+};
+
+const validateLoginData = (req, res, next) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+  
+  if (!validateEmail(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+  
+  next();
+};
 const validateProduct = (req, res, next) => {
   const { name, base_price_per_kg, unit, image_url } = req.body;
   
@@ -151,7 +309,7 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // Admin: Create product
-app.post('/api/admin/products', validateProduct, async (req, res) => {
+app.post('/api/admin/products', authenticateToken, requireAdmin, validateProduct, async (req, res) => {
   try {
     const product = new Product({
       ...req.body,
@@ -166,7 +324,7 @@ app.post('/api/admin/products', validateProduct, async (req, res) => {
 });
 
 // Admin: Update product
-app.put('/api/admin/products/:id', validateProduct, async (req, res) => {
+app.put('/api/admin/products/:id', authenticateToken, requireAdmin, validateProduct, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
       req.params.id,
@@ -186,7 +344,7 @@ app.put('/api/admin/products/:id', validateProduct, async (req, res) => {
 });
 
 // Admin: Delete product
-app.delete('/api/admin/products/:id', async (req, res) => {
+app.delete('/api/admin/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
     if (!product) {
@@ -374,13 +532,170 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // Get orders (admin)
-app.get('/api/admin/orders', async (req, res) => {
+app.get('/api/admin/orders', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// Authentication Routes
+
+// Register user
+app.post('/api/auth/register', validateRegisterData, async (req, res) => {
+  try {
+    const { name, email, password, phone } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+    
+    // Check if phone already exists
+    const existingPhone = await User.findOne({ phone });
+    if (existingPhone) {
+      return res.status(400).json({ error: 'User with this phone number already exists' });
+    }
+    
+    // Create new user
+    const user = new User({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      phone: phone.trim()
+    });
+    
+    await user.save();
+    
+    // Generate token
+    const token = generateToken(user._id);
+    
+    res.status(201).json({
+      message: 'Registration successful',
+      user: user.toJSON(),
+      token
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
+});
+
+// Login user
+app.post('/api/auth/login', validateLoginData, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user || !user.isActive) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    // Generate token
+    const token = generateToken(user._id);
+    
+    res.json({
+      message: 'Login successful',
+      user: user.toJSON(),
+      token
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed. Please try again.' });
+  }
+});
+
+// Get user profile
+app.get('/api/auth/profile', authenticateToken, async (req, res) => {
+  try {
+    res.json(req.user);
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Update user profile
+app.put('/api/auth/profile/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, phone } = req.body;
+    
+    // Check if user is updating their own profile or is admin
+    if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied. You can only update your own profile.' });
+    }
+    
+    // Validation
+    if (name && !name.trim()) {
+      return res.status(400).json({ error: 'Name cannot be empty' });
+    }
+    
+    if (phone && !validatePhone(phone)) {
+      return res.status(400).json({ error: 'Invalid phone number format' });
+    }
+    
+    // Check if phone already exists for another user
+    if (phone) {
+      const existingPhone = await User.findOne({ 
+        phone: phone.trim(), 
+        _id: { $ne: userId } 
+      });
+      if (existingPhone) {
+        return res.status(400).json({ error: 'This phone number is already in use' });
+      }
+    }
+    
+    const updateData = { updatedAt: new Date() };
+    if (name) updateData.name = name.trim();
+    if (phone) updateData.phone = phone.trim();
+    
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user.toJSON());
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Verify token
+app.get('/api/auth/verify', authenticateToken, async (req, res) => {
+  try {
+    res.json(req.user);
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({ error: 'Token verification failed' });
+  }
+});
+
+// Logout (client-side mainly, but can be used for server-side cleanup)
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+  try {
+    // In a more advanced setup, you might want to blacklist the token
+    res.json({ message: 'Logout successful' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: 'Logout failed' });
   }
 });
 

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Product, CartItem, Order } from '../types';
+import { Product, CartItem, Order, User, LoginCredentials, RegisterData, AuthResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -12,8 +12,14 @@ const api = axios.create({
   },
 });
 
-// Request interceptor for adding session ID
+// Request interceptor for adding session ID and auth token
 api.interceptors.request.use((config) => {
+  // Add auth token if available
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
   // Add session ID for cart operations
   const sessionId = localStorage.getItem('sessionId') || 'guest';
   if (config.url?.includes('/cart/')) {
@@ -115,6 +121,44 @@ export const orderAPI = {
   // Admin: Get all orders
   getAll: async (): Promise<Order[]> => {
     const response = await api.get('/admin/orders');
+    return response.data;
+  },
+};
+
+// Authentication API
+export const authAPI = {
+  // Login
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    const response = await api.post('/auth/login', credentials);
+    return response.data;
+  },
+
+  // Register
+  register: async (data: RegisterData): Promise<AuthResponse> => {
+    const response = await api.post('/auth/register', data);
+    return response.data;
+  },
+
+  // Get user profile
+  getProfile: async (): Promise<User> => {
+    const response = await api.get('/auth/profile');
+    return response.data;
+  },
+
+  // Update user profile
+  updateProfile: async (userId: string, data: Partial<User>): Promise<User> => {
+    const response = await api.put(`/auth/profile/${userId}`, data);
+    return response.data;
+  },
+
+  // Logout (server-side cleanup if needed)
+  logout: async (): Promise<void> => {
+    await api.post('/auth/logout');
+  },
+
+  // Verify token
+  verifyToken: async (): Promise<User> => {
+    const response = await api.get('/auth/verify');
     return response.data;
   },
 };

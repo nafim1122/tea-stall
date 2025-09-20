@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, CreditCard, Phone, MapPin, Shield, AlertCircle } from 'lucide-react';
+import { X, CreditCard, Phone, MapPin, Shield, AlertCircle, User, UserPlus } from 'lucide-react';
 import { PaymentData } from '../types';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from "sonner";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
@@ -10,15 +11,20 @@ interface PaymentModalProps {
   onClose: () => void;
   total: number;
   onOrderComplete: (paymentData: PaymentData) => void;
+  onLoginRequired?: () => void;
+  onRegisterRequired?: () => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,
   onClose,
   total,
-  onOrderComplete
+  onOrderComplete,
+  onLoginRequired,
+  onRegisterRequired
 }) => {
-  const [step, setStep] = useState<'method' | 'details' | 'success'>('method');
+  const { user, isAuthenticated } = useAuth();
+  const [step, setStep] = useState<'auth' | 'method' | 'details' | 'success'>('auth');
   const [paymentMethod, setPaymentMethod] = useState('bKash');
   const [formData, setFormData] = useState({
     phone: '',
@@ -59,8 +65,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       resetModal();
+    } else {
+      // Set initial step based on authentication status
+      if (isAuthenticated) {
+        setStep('method');
+        // Pre-fill user data
+        if (user) {
+          setFormData(prev => ({
+            ...prev,
+            phone: user.phone || '',
+            codPhone: user.phone || ''
+          }));
+        }
+      } else {
+        setStep('auth');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthenticated, user]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -252,6 +273,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             onClick={handleClose}
             disabled={isLoading}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+            title="Close payment modal"
+            aria-label="Close payment modal"
           >
             <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
           </button>
@@ -265,6 +288,75 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               <p className="text-2xl sm:text-3xl font-bold text-green-600">৳{total}</p>
             </div>
           </div>
+
+          {/* Authentication Step */}
+          {step === 'auth' && (
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="bg-green-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <User className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Secure Your Order
+                </h3>
+                <p className="text-gray-600">
+                  Sign in or create an account to proceed with your order safely and track your purchase history.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-green-800 mb-2">Benefits of Creating an Account:</h4>
+                  <ul className="text-sm text-green-700 space-y-1">
+                    <li>• Track your order status</li>
+                    <li>• Faster checkout next time</li>
+                    <li>• Order history and reordering</li>
+                    <li>• Exclusive member offers</li>
+                  </ul>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onLoginRequired?.();
+                    }}
+                    className="bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <User className="h-5 w-5" />
+                    <span>Sign In to Existing Account</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onRegisterRequired?.();
+                    }}
+                    className="bg-emerald-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <UserPlus className="h-5 w-5" />
+                    <span>Create New Account</span>
+                  </button>
+                </div>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-4 text-gray-500">or</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setStep('method')}
+                  className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Continue as Guest
+                </button>
+              </div>
+            </div>
+          )}
 
           {step === 'method' && (
             <form onSubmit={handleMethodSubmit} className="space-y-6">
