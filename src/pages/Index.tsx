@@ -308,9 +308,11 @@ const Index = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center gap-3">
-              <div className="h-10 w-10 bg-green-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-xl">🍵</span>
-              </div>
+              <img 
+                src="/tea-stall-logo.svg" 
+                alt="Tea Stall Logo" 
+                className="h-10 w-10"
+              />
               <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                 Tea Stall
               </h1>

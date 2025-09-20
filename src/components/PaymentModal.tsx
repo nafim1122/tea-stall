@@ -261,9 +261,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 bg-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm">🍵</span>
-            </div>
+            <img 
+              src="/tea-stall-logo.svg" 
+              alt="Tea Stall Logo" 
+              className="h-6 w-6"
+            />
             <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
             <h2 className="text-lg sm:text-xl font-bold text-gray-800">Payment</h2>
           </div>

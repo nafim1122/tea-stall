@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <!-- Tea Cup -->
+  <path d="M137 185c-25 0-45 20-45 45v20c0 60 40 100 100 100h50c60 0 100-40 100-100v-20c0-25-20-45-45-45H137z" fill="#7CB342"/>
+  <path d="M342 230c20 0 35-15 35-35s-15-35-35-35h-20v70h20z" fill="#2C3E50"/>
+  <path d="M137 185h160c25 0 45 20 45 45v5H92v-5c0-25 20-45 45-45z" fill="#8BC34A"/>
+  
+  <!-- Steam -->
+  <path d="M190 280c0-15 5-25 10-35s10-20 10-35-5-25-10-35" stroke="#2C3E50" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M210 280c0-15 5-25 10-35s10-20 10-35-5-25-10-35" stroke="#2C3E50" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M230 280c0-15 5-25 10-35s10-20 10-35-5-25-10-35" stroke="#2C3E50" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Tea Leaves -->
+  <ellipse cx="295" cy="70" rx="25" ry="25" fill="#7CB342"/>
+  <ellipse cx="295" cy="70" rx="15" ry="15" fill="#FFFFFF" opacity="0.3"/>
+  
+  <!-- Leaf 1 -->
+  <path d="M235 115c20-30 50-20 60 0s-10 40-30 35-40-15-30-35z" fill="#8BC34A"/>
+  <path d="M240 125c5-8 13-5 15 2s-3 10-8 8-9-5-7-10z" fill="#FFFFFF" opacity="0.3"/>
+  <path d="M245 120l15 10" stroke="#7CB342" stroke-width="2"/>
+  
+  <!-- Leaf 2 -->
+  <path d="M315 115c30-20 40 10 35 30s-25 25-35 15-15-25 0-45z" fill="#8BC34A"/>
+  <path d="M325 125c8-5 10 3 8 8s-10 5-15-2-1-10 7-6z" fill="#FFFFFF" opacity="0.3"/>
+  <path d="M330 120l-15 10" stroke="#7CB342" stroke-width="2"/>
+  
+  <!-- Cup Handle -->
+  <path d="M342 200v60c0 15-10 25-25 25s-25-10-25-25v-10" stroke="#2C3E50" stroke-width="8" fill="none"/>
+  
+  <!-- Cup Base/Saucer -->
+  <ellipse cx="217" cy="350" rx="80" ry="15" fill="#2C3E50"/>
+  <ellipse cx="217" cy="345" rx="70" ry="12" fill="#34495E"/>
+</svg>
