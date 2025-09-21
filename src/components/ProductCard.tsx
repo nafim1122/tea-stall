@@ -18,23 +18,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   const priceAnnouncementRef = useRef<HTMLDivElement>(null);
 
   /**
-   * PRICING CONFIGURATION - Easily adjustable
-   * Update these values to change product pricing
+   * PRICING CONFIGURATION - Using admin panel set prices
+   * Properly calculates prices based on admin panel input
    */
   const getPriceConfiguration = () => {
-    // Default pricing if not specified in product data
-    const defaultPricePerKg = product.base_price_per_kg || 400; // ৳400 per kg
-    const defaultPricePerHalfKg = product.price_per_half_kg || 220; // ৳220 per ½kg
+    // Use the price set in admin panel (base_price_per_kg)
+    const pricePerKg = product.base_price_per_kg;
     
     if (selectedWeight === '1kg') {
       return {
-        currentPrice: defaultPricePerKg,
+        currentPrice: pricePerKg,
         oldPrice: product.old_price_per_kg
       };
     } else {
+      // For half kg: calculate as exactly half of the per kg price
+      const pricePerHalfKg = product.price_per_half_kg || (pricePerKg * 0.5);
       return {
-        currentPrice: defaultPricePerHalfKg,
-        oldPrice: product.old_price_per_half_kg || (product.old_price_per_kg ? Math.round(product.old_price_per_kg * 0.55) : undefined)
+        currentPrice: pricePerHalfKg,
+        oldPrice: product.old_price_per_half_kg || (product.old_price_per_kg ? product.old_price_per_kg * 0.5 : undefined)
       };
     }
   };
@@ -178,7 +179,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
               <button
                 type="button"
                 role="radio"
-                aria-checked={selectedWeight === '1kg'}
+                aria-checked={selectedWeight === '1kg' ? 'true' : 'false'}
                 onClick={() => handleWeightChange('1kg')}
                 className={`flex-1 py-2 px-3 border-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   selectedWeight === '1kg'
@@ -193,7 +194,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
               <button
                 type="button"
                 role="radio"
-                aria-checked={selectedWeight === '0.5kg'}
+                aria-checked={selectedWeight === '0.5kg' ? 'true' : 'false'}
                 onClick={() => handleWeightChange('0.5kg')}
                 className={`flex-1 py-2 px-3 border-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   selectedWeight === '0.5kg'

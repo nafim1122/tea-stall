@@ -120,7 +120,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       unit: newProduct.unit,
       img: newProduct.img,
       description: newProduct.description,
-      inStock: newProduct.inStock
+      inStock: newProduct.inStock,
+      hasWeightOptions: newProduct.unit === 'kg' // Automatically set weight options for kg-based products
     };
 
     // Use callback to update parent state - this will trigger localStorage save in Index.tsx
