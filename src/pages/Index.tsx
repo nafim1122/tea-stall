@@ -666,7 +666,7 @@ const Index = () => {
         products={products}
         orders={orders}
         onLogin={handleAdminLogin}
-        isAuthenticated={isAuthenticated_legacy}
+        isAuthenticated={isAuthenticated && user?.role === 'admin' ? true : isAuthenticated_legacy}
       />
     </div>
   );
