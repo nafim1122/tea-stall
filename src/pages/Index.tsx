@@ -50,9 +50,33 @@ const Index = () => {
       }
       
       if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        if (Array.isArray(parsedCart)) {
-          setCart(parsedCart);
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          if (Array.isArray(parsedCart)) {
+            // Validate cart items and filter out invalid ones
+            const validCartItems = parsedCart.filter(item => 
+              item && 
+              typeof item.productId === 'number' && 
+              typeof item.quantity === 'number' && 
+              item.quantity > 0 &&
+              typeof item.totalPriceAtTime === 'number'
+            );
+            setCart(validCartItems);
+            
+            // If we filtered out items, update localStorage
+            if (validCartItems.length !== parsedCart.length) {
+              console.warn('Found invalid cart items, cleaning up cart');
+              localStorage.setItem('cart', JSON.stringify(validCartItems));
+            }
+          } else {
+            console.warn('Cart data is not an array, clearing cart');
+            localStorage.removeItem('cart');
+            setCart([]);
+          }
+        } catch (parseError) {
+          console.error('Error parsing cart data, clearing cart:', parseError);
+          localStorage.removeItem('cart');
+          setCart([]);
         }
       }
       
@@ -188,6 +212,17 @@ const Index = () => {
 
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem('cart');
+    toast.success('Cart cleared successfully');
+  };
+
+  // Debug function to reset cart and localStorage if stuck
+  const resetCartCompletely = () => {
+    setCart([]);
+    localStorage.removeItem('cart');
+    localStorage.removeItem('products');
+    localStorage.removeItem('orders');
+    window.location.reload();
   };
 
   const getCartTotal = () => {
@@ -205,13 +240,25 @@ const Index = () => {
 
   const getCartItemCount = () => {
     try {
-      if (!Array.isArray(cart)) return 0;
-      return cart.reduce((total, item) => {
-        if (!item || typeof item.quantity !== 'number') return total;
+      if (!Array.isArray(cart)) {
+        console.warn('Cart is not an array, clearing cart state');
+        setCart([]);
+        return 0;
+      }
+      
+      const count = cart.reduce((total, item) => {
+        if (!item || typeof item.quantity !== 'number' || item.quantity < 0) {
+          console.warn('Invalid cart item found:', item);
+          return total;
+        }
         return total + item.quantity;
       }, 0);
+      
+      return count;
     } catch (error) {
       console.error('Error calculating cart item count:', error);
+      // Reset cart on error to prevent stuck state
+      setCart([]);
       return 0;
     }
   };
@@ -340,8 +387,21 @@ const Index = () => {
       }
     };
 
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Hidden debug feature: Ctrl+Shift+R to reset cart completely
+      if (event.ctrlKey && event.shiftKey && event.key === 'R') {
+        console.log('Manual cart reset triggered');
+        resetCartCompletely();
+      }
+    };
+
     document.addEventListener('click', handleOutsideClick);
-    return () => document.removeEventListener('click', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyPress);
+    
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyPress);
+    };
   }, [isMobileMenuOpen]);
 
   return (
