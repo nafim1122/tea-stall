@@ -70,6 +70,29 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       toast.success(response.message || 'Login successful!');
       return true;
     } catch (error) {
+      // Fallback for when backend is not available - check for admin credentials
+      if (credentials.email === 'admin@teatime.com' && credentials.password === 'admin123') {
+        const mockAdminUser = {
+          id: 'admin-1',
+          name: 'Tea Stall Admin',
+          email: 'admin@teatime.com',
+          phone: '+8801742236623',
+          role: 'admin' as const,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        const mockToken = 'mock-admin-token-' + Date.now();
+        
+        dispatch({ 
+          type: 'LOGIN_SUCCESS', 
+          payload: { user: mockAdminUser, token: mockToken } 
+        });
+        
+        toast.success('Admin login successful! (Offline mode)');
+        return true;
+      }
+      
       dispatch({ type: 'LOGIN_FAILURE' });
       const message = error instanceof Error && 'response' in error 
         ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Login failed. Please try again.'
