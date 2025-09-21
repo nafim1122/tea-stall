@@ -12,7 +12,7 @@ type WeightOption = '1kg' | '0.5kg';
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
   // State for weight selection, quantity, and total price
-  const [selectedWeight, setSelectedWeight] = useState<WeightOption>('1kg');
+  const [selectedWeight, setSelectedWeight] = useState<WeightOption>('0.5kg');
   const [quantity, setQuantity] = useState<number>(1);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const priceAnnouncementRef = useRef<HTMLDivElement>(null);
