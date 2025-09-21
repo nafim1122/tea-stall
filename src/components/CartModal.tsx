@@ -52,6 +52,8 @@ const CartModal: React.FC<CartModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            aria-label="Close cart"
+            title="Close cart"
           >
             <X className="h-6 w-6 text-gray-600" />
           </button>
@@ -92,6 +94,8 @@ const CartModal: React.FC<CartModalProps> = ({
                           <button
                             onClick={() => onUpdateQuantity(productId, quantity - (unit === 'kg' ? 0.1 : 1))}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                            aria-label={`Decrease ${product.name} quantity`}
+                            title={`Decrease ${product.name} quantity`}
                           >
                             <Minus className="h-4 w-4 text-gray-600" />
                           </button>
@@ -101,6 +105,8 @@ const CartModal: React.FC<CartModalProps> = ({
                           <button
                             onClick={() => onUpdateQuantity(productId, quantity + (unit === 'kg' ? 0.1 : 1))}
                             className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                            aria-label={`Increase ${product.name} quantity`}
+                            title={`Increase ${product.name} quantity`}
                           >
                             <Plus className="h-4 w-4 text-gray-600" />
                           </button>
@@ -109,6 +115,8 @@ const CartModal: React.FC<CartModalProps> = ({
                         <button
                           onClick={() => onRemoveItem(productId)}
                           className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                          aria-label={`Remove ${product.name} from cart`}
+                          title={`Remove ${product.name} from cart`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

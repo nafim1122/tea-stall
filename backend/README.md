@@ -14,16 +14,19 @@ A Node.js/Express backend for the Tea Stall e-commerce platform with price-per-k
 ## Installation
 
 1. **Clone and navigate to backend directory**
+
 ```bash
 cd backend
 ```
 
 2. **Install dependencies**
+
 ```bash
 npm install
 ```
 
 3. **Set up environment variables**
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
@@ -32,11 +35,13 @@ cp .env.example .env
 4. **Start MongoDB** (make sure MongoDB is running on your system)
 
 5. **Seed the database** (optional)
+
 ```bash
 npm run seed
 ```
 
 6. **Start the server**
+
 ```bash
 # Development mode
 npm run dev
