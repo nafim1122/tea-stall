@@ -1,18 +1,40 @@
 /* Custom CSS fixes for vendor prefix compatibility */
 
-/* Fix text-size-adjust property */
-*,
-*::before,
-*::after {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+/* Fix text-size-adjust property - only apply where supported */
+@supports (-webkit-text-size-adjust: 100%) {
+  *,
+  *::before,
+  *::after {
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+@supports (text-size-adjust: 100%) {
+  *,
+  *::before,
+  *::after {
+    text-size-adjust: 100%;
+  }
 }
 
 /* Fix appearance property */
 input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button {
   -webkit-appearance: none;
-  appearance: none;
+}
+
+@supports (-webkit-appearance: none) {
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+}
+
+@supports (appearance: none) {
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button {
+    appearance: none;
+  }
 }
 
 input[type="button"],
@@ -20,36 +42,57 @@ input[type="reset"],
 input[type="submit"],
 button {
   -webkit-appearance: button;
+  -moz-appearance: button;
   appearance: button;
 }
 
-/* Fix line-clamp property */
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  overflow: hidden;
+/* Fix line-clamp property with feature detection */
+@supports (-webkit-line-clamp: 1) {
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
 }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-}
+@supports (line-clamp: 1) {
+  .line-clamp-1 {
+    line-clamp: 1;
+  }
 
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  overflow: hidden;
+  .line-clamp-2 {
+    line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    line-clamp: 3;
+  }
 }
 
 /* Fix vertical-align with display block issues */
 .block {
+  vertical-align: baseline !important;
+}
+
+/* Reset vertical-align for elements that should be block */
+div, p, h1, h2, h3, h4, h5, h6, 
+section, article, main, aside, 
+header, footer, nav {
   vertical-align: baseline;
 }
 
@@ -58,4 +101,16 @@ button {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+}
+
+/* Prevent zoom on iOS */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
 }
