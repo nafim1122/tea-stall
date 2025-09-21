@@ -71,7 +71,6 @@ const Index = () => {
   // Save to localStorage when state changes
   useEffect(() => {
     try {
-      console.log('Saving products to localStorage:', products.length, 'products');
       localStorage.setItem('products', JSON.stringify(products));
     } catch (error) {
       console.error('Error saving products:', error);
@@ -319,23 +318,16 @@ const Index = () => {
 
   // Product management callback functions for AdminPanel
   const handleProductAdd = (newProduct: Product) => {
-    console.log('Adding new product:', newProduct);
-    setProducts(prev => {
-      const updated = [...prev, newProduct];
-      console.log('Updated products list:', updated);
-      return updated;
-    });
+    setProducts(prev => [...prev, newProduct]);
   };
 
   const handleProductUpdate = (updatedProduct: Product) => {
-    console.log('Updating product:', updatedProduct);
     setProducts(prev => prev.map(product => 
       product.id === updatedProduct.id ? updatedProduct : product
     ));
   };
 
   const handleProductDelete = (productId: number) => {
-    console.log('Deleting product with ID:', productId);
     setProducts(prev => prev.filter(product => product.id !== productId));
   };
 
