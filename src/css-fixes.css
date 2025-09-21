@@ -46,42 +46,29 @@ button {
   appearance: button;
 }
 
-/* Fix line-clamp property with feature detection */
-@supports (-webkit-line-clamp: 1) {
-  .line-clamp-1 {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 1;
-    overflow: hidden;
-  }
-
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-  }
+/* Fix line-clamp property with both vendor and standard properties */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
 }
 
-@supports (line-clamp: 1) {
-  .line-clamp-1 {
-    line-clamp: 1;
-  }
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
 
-  .line-clamp-2 {
-    line-clamp: 2;
-  }
-
-  .line-clamp-3 {
-    line-clamp: 3;
-  }
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
 }
 
 /* Fix vertical-align with display block issues */
