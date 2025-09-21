@@ -26,10 +26,17 @@ const CartModal: React.FC<CartModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const cartWithProducts = cart.map(item => ({
-    ...item,
-    product: products.find(p => p.id === item.productId)!
-  }));
+  // Defensive programming: ensure cart and products are arrays
+  const safeCart = Array.isArray(cart) ? cart : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  const cartWithProducts = safeCart.map(item => {
+    const product = safeProducts.find(p => p.id === item.productId);
+    return {
+      ...item,
+      product: product || null
+    };
+  }).filter(item => item.product !== null); // Only include items with valid products
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-BD', {

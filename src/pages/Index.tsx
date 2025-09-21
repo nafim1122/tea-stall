@@ -16,6 +16,7 @@ import ResponsiveGrid from '../components/ResponsiveGrid';
 import LoginModal from '../components/LoginModal';
 import RegisterModal from '../components/RegisterModal';
 import ProfileModal from '../components/ProfileModal';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const Index = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -190,43 +191,71 @@ const Index = () => {
   };
 
   const getCartTotal = () => {
-    return cart.reduce((total, item) => total + item.totalPriceAtTime, 0);
+    try {
+      if (!Array.isArray(cart)) return 0;
+      return cart.reduce((total, item) => {
+        if (!item || typeof item.totalPriceAtTime !== 'number') return total;
+        return total + item.totalPriceAtTime;
+      }, 0);
+    } catch (error) {
+      console.error('Error calculating cart total:', error);
+      return 0;
+    }
   };
 
   const getCartItemCount = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
+    try {
+      if (!Array.isArray(cart)) return 0;
+      return cart.reduce((total, item) => {
+        if (!item || typeof item.quantity !== 'number') return total;
+        return total + item.quantity;
+      }, 0);
+    } catch (error) {
+      console.error('Error calculating cart item count:', error);
+      return 0;
+    }
   };
 
   const handleOrderComplete = (paymentData: PaymentData) => {
-    const orderItems = cart.map(item => {
-      const product = products.find(p => p.id === item.productId);
-      return {
-        name: product?.name || 'Unknown Product',
-        quantity: item.quantity,
-        unit: item.unit,
-        unitPrice: item.unitPriceAtTime,
-        totalPrice: item.totalPriceAtTime
+    try {
+      if (!Array.isArray(cart) || cart.length === 0) {
+        toast.error('Cart is empty');
+        return;
+      }
+
+      const orderItems = cart.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return {
+          name: product?.name || 'Unknown Product',
+          quantity: item.quantity || 0,
+          unit: (item.unit as "kg" | "piece") || 'piece',
+          unitPrice: item.unitPriceAtTime || 0,
+          totalPrice: item.totalPriceAtTime || 0
+        };
+      });
+
+      const newOrder: Order = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString('en-GB'),
+        items: orderItems,
+        total: getCartTotal(),
+        paymentMethod: paymentData.paymentMethod,
+        transactionId: paymentData.transactionId,
+        address: paymentData.address,
+        phone: paymentData.phone,
+        status: 'pending'
       };
-    });
 
-    const newOrder: Order = {
-      id: Date.now(),
-      date: new Date().toLocaleDateString('en-GB'),
-      items: orderItems,
-      total: getCartTotal(),
-      paymentMethod: paymentData.paymentMethod,
-      transactionId: paymentData.transactionId,
-      address: paymentData.address,
-      phone: paymentData.phone,
-      status: 'pending'
-    };
-
-    setOrders([...orders, newOrder]);
-    clearCart();
-    setIsPaymentOpen(false);
-    setIsCartOpen(false);
-    
-    toast.success('Order placed successfully!');
+      setOrders([...orders, newOrder]);
+      clearCart();
+      setIsPaymentOpen(false);
+      setIsCartOpen(false);
+      
+      toast.success('Order placed successfully!');
+    } catch (error) {
+      console.error('Error completing order:', error);
+      toast.error('Failed to place order. Please try again.');
+    }
   };
 
   const handleProductSelect = (productId: number) => {
@@ -628,36 +657,66 @@ const Index = () => {
       </footer>
 
       {/* Modals */}
-      <CartModal
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cart={cart}
-        products={products}
-        onUpdateQuantity={updateCartQuantity}
-        onRemoveItem={removeFromCart}
-        onCheckout={() => {
-          setIsCartOpen(false);
-          setIsPaymentOpen(true);
-        }}
-        total={getCartTotal()}
-      />
+      <ErrorBoundary fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center">
+            <h3 className="text-lg font-semibold mb-2">Cart Error</h3>
+            <p className="text-gray-600 mb-4">There was an issue with the cart. Please refresh the page.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      }>
+        <CartModal
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cart={cart}
+          products={products}
+          onUpdateQuantity={updateCartQuantity}
+          onRemoveItem={removeFromCart}
+          onCheckout={() => {
+            setIsCartOpen(false);
+            setIsPaymentOpen(true);
+          }}
+          total={getCartTotal()}
+        />
+      </ErrorBoundary>
 
-      <PaymentModal
-        isOpen={isPaymentOpen}
-        onClose={() => {
-          setIsPaymentOpen(false);
-        }}
-        total={getCartTotal()}
-        onOrderComplete={handleOrderComplete}
-        onLoginRequired={() => {
-          setIsPaymentOpen(false);
-          setIsLoginOpen(true);
-        }}
-        onRegisterRequired={() => {
-          setIsPaymentOpen(false);
-          setIsRegisterOpen(true);
-        }}
-      />
+      <ErrorBoundary fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full text-center">
+            <h3 className="text-lg font-semibold mb-2">Payment Error</h3>
+            <p className="text-gray-600 mb-4">There was an issue with the payment system. Please refresh the page.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      }>
+        <PaymentModal
+          isOpen={isPaymentOpen}
+          onClose={() => {
+            setIsPaymentOpen(false);
+          }}
+          total={getCartTotal()}
+          onOrderComplete={handleOrderComplete}
+          onLoginRequired={() => {
+            setIsPaymentOpen(false);
+            setIsLoginOpen(true);
+          }}
+          onRegisterRequired={() => {
+            setIsPaymentOpen(false);
+            setIsRegisterOpen(true);
+          }}
+        />
+      </ErrorBoundary>
 
       {/* Authentication Modals */}
       <LoginModal
