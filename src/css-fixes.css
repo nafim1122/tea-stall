@@ -1,0 +1,61 @@
+/* Custom CSS fixes for vendor prefix compatibility */
+
+/* Fix text-size-adjust property */
+*,
+*::before,
+*::after {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Fix appearance property */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="button"],
+input[type="reset"],
+input[type="submit"],
+button {
+  -webkit-appearance: button;
+  appearance: button;
+}
+
+/* Fix line-clamp property */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* Fix vertical-align with display block issues */
+.block {
+  vertical-align: baseline;
+}
+
+/* Ensure better cross-browser compatibility */
+.appearance-none {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}

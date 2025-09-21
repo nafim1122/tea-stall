@@ -92,5 +92,45 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require("tailwindcss-animate"),
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		function({ addUtilities }: any) {
+			const newUtilities = {
+				'.appearance-none': {
+					'-webkit-appearance': 'none',
+					'-moz-appearance': 'none',
+					'appearance': 'none',
+				},
+				'.text-size-adjust-auto': {
+					'-webkit-text-size-adjust': '100%',
+					'-moz-text-size-adjust': '100%',
+					'text-size-adjust': '100%',
+				},
+				'.line-clamp-1': {
+					'display': '-webkit-box',
+					'-webkit-box-orient': 'vertical',
+					'-webkit-line-clamp': '1',
+					'line-clamp': '1',
+					'overflow': 'hidden',
+				},
+				'.line-clamp-2': {
+					'display': '-webkit-box',
+					'-webkit-box-orient': 'vertical',
+					'-webkit-line-clamp': '2',
+					'line-clamp': '2',
+					'overflow': 'hidden',
+				},
+				'.line-clamp-3': {
+					'display': '-webkit-box',
+					'-webkit-box-orient': 'vertical',
+					'-webkit-line-clamp': '3',
+					'line-clamp': '3',
+					'overflow': 'hidden',
+				},
+			}
+			addUtilities(newUtilities, ['responsive', 'hover'])
+		}
+	],
 } satisfies Config;

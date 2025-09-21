@@ -1,3 +1,6 @@
+/* Import CSS compatibility fixes first */
+@import './css-fixes.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
