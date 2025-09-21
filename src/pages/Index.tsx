@@ -35,6 +35,18 @@ const Index = () => {
   // Legacy authentication state for admin panel backwards compatibility
   const [isAuthenticated_legacy, setIsAuthenticated_legacy] = useState(false);
 
+  // Temporary fix: Force clear cart on component mount to resolve stuck state
+  useEffect(() => {
+    console.log('Checking cart state on mount...');
+    const currentCart = localStorage.getItem('cart');
+    console.log('Current cart in localStorage:', currentCart);
+    
+    // Temporarily force clear cart to fix stuck state
+    localStorage.removeItem('cart');
+    setCart([]);
+    console.log('Cart forcefully cleared');
+  }, []);
+
   // Load data from localStorage on mount
   useEffect(() => {
     try {
@@ -743,6 +755,7 @@ const Index = () => {
             setIsPaymentOpen(true);
           }}
           total={getCartTotal()}
+          onClearCart={resetCartCompletely}
         />
       </ErrorBoundary>
 

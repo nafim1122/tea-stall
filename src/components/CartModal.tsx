@@ -12,6 +12,7 @@ interface CartModalProps {
   onRemoveItem: (productId: number) => void;
   onCheckout: () => void;
   total: number;
+  onClearCart?: () => void;
 }
 
 const CartModal: React.FC<CartModalProps> = ({
@@ -22,7 +23,8 @@ const CartModal: React.FC<CartModalProps> = ({
   onUpdateQuantity,
   onRemoveItem,
   onCheckout,
-  total
+  total,
+  onClearCart
 }) => {
   if (!isOpen) return null;
 
@@ -150,12 +152,27 @@ const CartModal: React.FC<CartModalProps> = ({
               <span>Total:</span>
               <span className="text-green-600">{formatPrice(total)}</span>
             </div>
-            <button
-              onClick={onCheckout}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
-            >
-              Proceed to Checkout
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={onCheckout}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition-all duration-200"
+              >
+                Proceed to Checkout
+              </button>
+              {onClearCart && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear all items from your cart?')) {
+                      onClearCart();
+                    }
+                  }}
+                  className="w-full bg-red-600 text-white py-2 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear Cart
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
