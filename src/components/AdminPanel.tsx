@@ -123,14 +123,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       inStock: newProduct.inStock
     };
 
-    // Update localStorage directly
-    const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
-    const updatedProducts = [...currentProducts, productToAdd];
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    
-    // Use callback to update parent state if available
+    // Use callback to update parent state - this will trigger localStorage save in Index.tsx
     if (onProductAdd) {
       onProductAdd(productToAdd);
+    } else {
+      // Fallback: Update localStorage directly only if callback is not available
+      const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      const updatedProducts = [...currentProducts, productToAdd];
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
     }
     
     // Reset form
@@ -152,16 +152,16 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     e.preventDefault();
     if (!editingProduct) return;
     
-    // Update localStorage directly
-    const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
-    const updatedProducts = currentProducts.map((p: Product) => 
-      p.id === editingProduct.id ? editingProduct : p
-    );
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    
-    // Use callback to update parent state if available
+    // Use callback to update parent state - this will trigger localStorage save in Index.tsx
     if (onProductUpdate) {
       onProductUpdate(editingProduct);
+    } else {
+      // Fallback: Update localStorage directly only if callback is not available
+      const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+      const updatedProducts = currentProducts.map((p: Product) => 
+        p.id === editingProduct.id ? editingProduct : p
+      );
+      localStorage.setItem('products', JSON.stringify(updatedProducts));
     }
     
     setEditingProduct(null);
@@ -171,14 +171,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleDeleteProduct = (id: number) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      // Update localStorage directly
-      const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
-      const updatedProducts = currentProducts.filter((p: Product) => p.id !== id);
-      localStorage.setItem('products', JSON.stringify(updatedProducts));
-      
-      // Use callback to update parent state if available
+      // Use callback to update parent state - this will trigger localStorage save in Index.tsx
       if (onProductDelete) {
         onProductDelete(id);
+      } else {
+        // Fallback: Update localStorage directly only if callback is not available
+        const currentProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        const updatedProducts = currentProducts.filter((p: Product) => p.id !== id);
+        localStorage.setItem('products', JSON.stringify(updatedProducts));
       }
       
       toast.success('Product deleted successfully!');
