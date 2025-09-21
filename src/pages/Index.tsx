@@ -636,6 +636,7 @@ const Index = () => {
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         onCheckout={() => {
+          console.log('Checkout clicked - closing cart and opening payment modal');
           setIsCartOpen(false);
           setIsPaymentOpen(true);
         }}
@@ -644,7 +645,10 @@ const Index = () => {
 
       <PaymentModal
         isOpen={isPaymentOpen}
-        onClose={() => setIsPaymentOpen(false)}
+        onClose={() => {
+          console.log('PaymentModal onClose called');
+          setIsPaymentOpen(false);
+        }}
         total={getCartTotal()}
         onOrderComplete={handleOrderComplete}
         onLoginRequired={() => {
