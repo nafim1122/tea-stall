@@ -33,12 +33,70 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     description: '',
     inStock: true
   });
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [editImagePreview, setEditImagePreview] = useState<string>('');
 
   if (!isOpen) return null;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     onLogin(credentials);
+  };
+
+  // Image upload handler for new products
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image file (JPEG, PNG, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target?.result as string;
+      setNewProduct(prev => ({ ...prev, img: base64String }));
+      setImagePreview(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Image upload handler for editing products
+  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image file (JPEG, PNG, or WebP)');
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target?.result as string;
+      if (editingProduct) {
+        setEditingProduct(prev => prev ? { ...prev, img: base64String } : null);
+        setEditImagePreview(base64String);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddProduct = (e: React.FormEvent) => {
@@ -74,6 +132,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       description: '',
       inStock: true
     });
+    setImagePreview('');
     
     toast.success('Product added successfully!');
     // Reload the page to reflect changes
@@ -114,6 +173,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     setCredentials({ username: '', password: '' });
     setActiveTab('dashboard');
     setEditingProduct(null);
+    setImagePreview('');
+    setEditImagePreview('');
     onClose();
   };
 
@@ -306,66 +367,127 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   {/* Add Product Form */}
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4">Add New Product</h4>
-                    <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <input
-                        type="text"
-                        placeholder="Product Name"
-                        value={newProduct.name}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
-                        required
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Base Price per Kg/Piece"
-                        value={newProduct.base_price_per_kg || ''}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, base_price_per_kg: Number(e.target.value) }))}
-                        required
-                        min="1"
-                        step="0.01"
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Old Price (Optional)"
-                        value={newProduct.old_price_per_kg || ''}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, old_price_per_kg: Number(e.target.value) }))}
-                        min="1"
-                        step="0.01"
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                      <select
-                        value={newProduct.unit}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, unit: e.target.value as 'kg' | 'piece' }))}
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        title="Select pricing unit"
-                        aria-label="Select pricing unit"
-                      >
-                        <option value="kg">Per Kg</option>
-                        <option value="piece">Per Piece</option>
-                      </select>
-                      <input
-                        type="url"
-                        placeholder="Image URL"
-                        value={newProduct.img}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, img: e.target.value }))}
-                        required
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Description"
-                        value={newProduct.description}
-                        onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
-                        className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 md:col-span-2"
-                      />
-                      <button
-                        type="submit"
-                        className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Product
-                      </button>
+                    <form onSubmit={handleAddProduct} className="space-y-4">
+                      {/* First Row */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <input
+                          type="text"
+                          placeholder="Product Name"
+                          value={newProduct.name}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, name: e.target.value }))}
+                          required
+                          className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Base Price per Kg/Piece"
+                          value={newProduct.base_price_per_kg || ''}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, base_price_per_kg: Number(e.target.value) }))}
+                          required
+                          min="1"
+                          step="0.01"
+                          className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Old Price (Optional)"
+                          value={newProduct.old_price_per_kg || ''}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, old_price_per_kg: Number(e.target.value) }))}
+                          min="1"
+                          step="0.01"
+                          className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                        />
+                        <select
+                          value={newProduct.unit}
+                          onChange={(e) => setNewProduct(prev => ({ ...prev, unit: e.target.value as 'kg' | 'piece' }))}
+                          className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          title="Select pricing unit"
+                          aria-label="Select pricing unit"
+                        >
+                          <option value="kg">Per Kg</option>
+                          <option value="piece">Per Piece</option>
+                        </select>
+                      </div>
+
+                      {/* Second Row - Image Upload and Description */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        {/* Image Upload Section */}
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">Product Image</label>
+                          <div className="flex flex-col items-center space-y-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              required
+                              className="hidden"
+                              id="new-product-image"
+                            />
+                            <label
+                              htmlFor="new-product-image"
+                              className="cursor-pointer bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-green-500 transition-colors w-full text-center"
+                            >
+                              {imagePreview ? (
+                                <div className="relative">
+                                  <img
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    className="w-24 h-24 object-cover rounded-lg mx-auto mb-2"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setImagePreview('');
+                                      setNewProduct(prev => ({ ...prev, img: '' }));
+                                      // Reset the file input
+                                      const fileInput = document.getElementById('new-product-image') as HTMLInputElement;
+                                      if (fileInput) fileInput.value = '';
+                                    }}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                                    title="Remove image"
+                                  >
+                                    ×
+                                  </button>
+                                  <p className="text-sm text-green-600">Click to change image</p>
+                                </div>
+                              ) : (
+                                <div className="text-gray-500">
+                                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                  </svg>
+                                  <p className="text-sm">Click to upload image</p>
+                                  <p className="text-xs text-gray-400">PNG, JPG, WebP up to 5MB</p>
+                                </div>
+                              )}
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="lg:col-span-2 space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">Description</label>
+                          <textarea
+                            placeholder="Product description..."
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
+                            rows={4}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Product
+                        </button>
+                      </div>
                     </form>
                   </div>
 
@@ -402,7 +524,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                               <td className="px-4 py-3">
                                 <div className="flex gap-2">
                                   <button
-                                    onClick={() => setEditingProduct(product)}
+                                    onClick={() => {
+                                      setEditingProduct(product);
+                                      setEditImagePreview('');
+                                    }}
                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                     title="Edit product"
                                     aria-label="Edit product"
@@ -496,7 +621,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="flex items-center justify-between p-4 border-b">
                 <h3 className="text-lg font-semibold">Edit Product</h3>
                 <button
-                  onClick={() => setEditingProduct(null)}
+                  onClick={() => {
+                    setEditingProduct(null);
+                    setEditImagePreview('');
+                  }}
                   className="p-1 hover:bg-gray-100 rounded"
                   title="Close edit dialog"
                   aria-label="Close edit dialog"
@@ -542,14 +670,59 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   <option value="kg">Per Kg</option>
                   <option value="piece">Per Piece</option>
                 </select>
-                <input
-                  type="url"
-                  placeholder="Image URL"
-                  value={editingProduct.img}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, img: e.target.value } : null)}
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
+                
+                {/* Image Upload Section for Edit */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Product Image</label>
+                  <div className="flex flex-col items-center space-y-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleEditImageUpload}
+                      className="hidden"
+                      id="edit-product-image"
+                    />
+                    <label
+                      htmlFor="edit-product-image"
+                      className="cursor-pointer bg-white border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-green-500 transition-colors w-full text-center"
+                    >
+                      {editImagePreview || editingProduct.img ? (
+                        <div className="relative">
+                          <img
+                            src={editImagePreview || editingProduct.img}
+                            alt="Preview"
+                            className="w-24 h-24 object-cover rounded-lg mx-auto mb-2"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setEditImagePreview('');
+                              setEditingProduct(prev => prev ? { ...prev, img: '' } : null);
+                              // Reset the file input
+                              const fileInput = document.getElementById('edit-product-image') as HTMLInputElement;
+                              if (fileInput) fileInput.value = '';
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                            title="Remove image"
+                          >
+                            ×
+                          </button>
+                          <p className="text-sm text-green-600">Click to change image</p>
+                        </div>
+                      ) : (
+                        <div className="text-gray-500">
+                          <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <p className="text-sm">Click to upload new image</p>
+                          <p className="text-xs text-gray-400">PNG, JPG, WebP up to 5MB</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                </div>
                 <textarea
                   placeholder="Description"
                   value={editingProduct.description || ''}
@@ -575,7 +748,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditingProduct(null)}
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setEditImagePreview('');
+                    }}
                     className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                   >
                     Cancel
