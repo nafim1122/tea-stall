@@ -3,18 +3,22 @@ export interface Product {
   id: number;
   name: string;
   base_price_per_kg: number;
+  price_per_half_kg?: number; // Independent pricing for half kg
   old_price_per_kg?: number;
+  old_price_per_half_kg?: number; // Old price for half kg
   unit: 'kg' | 'piece';
   img: string;
   description?: string;
   category?: string;
   inStock?: boolean;
+  hasWeightOptions?: boolean; // Whether product supports weight options
 }
 
 export interface CartItem {
   productId: number;
   quantity: number; // in kg or pieces
   unit: 'kg' | 'piece';
+  weight?: string; // '1kg' or '0.5kg' for weight-based products
   unitPriceAtTime: number;
   totalPriceAtTime: number;
 }
