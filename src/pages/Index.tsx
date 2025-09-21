@@ -287,6 +287,21 @@ const Index = () => {
     setIsLoginOpen(true);
   };
 
+  // Product management callback functions for AdminPanel
+  const handleProductAdd = (newProduct: Product) => {
+    setProducts(prev => [...prev, newProduct]);
+  };
+
+  const handleProductUpdate = (updatedProduct: Product) => {
+    setProducts(prev => prev.map(product => 
+      product.id === updatedProduct.id ? updatedProduct : product
+    ));
+  };
+
+  const handleProductDelete = (productId: number) => {
+    setProducts(prev => prev.filter(product => product.id !== productId));
+  };
+
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -667,6 +682,9 @@ const Index = () => {
         orders={orders}
         onLogin={handleAdminLogin}
         isAuthenticated={isAuthenticated && user?.role === 'admin' ? true : isAuthenticated_legacy}
+        onProductAdd={handleProductAdd}
+        onProductUpdate={handleProductUpdate}
+        onProductDelete={handleProductDelete}
       />
     </div>
   );

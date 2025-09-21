@@ -11,6 +11,9 @@ interface AdminPanelProps {
   orders: Order[];
   onLogin: (credentials: { username: string; password: string }) => void;
   isAuthenticated: boolean;
+  onProductAdd?: (product: Product) => void;
+  onProductUpdate?: (product: Product) => void;
+  onProductDelete?: (productId: number) => void;
 }
 
 const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -19,7 +22,10 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   products,
   orders,
   onLogin,
-  isAuthenticated
+  isAuthenticated,
+  onProductAdd,
+  onProductUpdate,
+  onProductDelete
 }) => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders'>('dashboard');
@@ -122,6 +128,11 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     const updatedProducts = [...currentProducts, productToAdd];
     localStorage.setItem('products', JSON.stringify(updatedProducts));
     
+    // Use callback to update parent state if available
+    if (onProductAdd) {
+      onProductAdd(productToAdd);
+    }
+    
     // Reset form
     setNewProduct({
       name: '',
@@ -135,8 +146,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     setImagePreview('');
     
     toast.success('Product added successfully!');
-    // Reload the page to reflect changes
-    window.location.reload();
   };
 
   const handleUpdateProduct = (e: React.FormEvent) => {
@@ -150,10 +159,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     );
     localStorage.setItem('products', JSON.stringify(updatedProducts));
     
+    // Use callback to update parent state if available
+    if (onProductUpdate) {
+      onProductUpdate(editingProduct);
+    }
+    
     setEditingProduct(null);
+    setEditImagePreview('');
     toast.success('Product updated successfully!');
-    // Reload the page to reflect changes
-    window.location.reload();
   };
 
   const handleDeleteProduct = (id: number) => {
@@ -163,9 +176,12 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       const updatedProducts = currentProducts.filter((p: Product) => p.id !== id);
       localStorage.setItem('products', JSON.stringify(updatedProducts));
       
+      // Use callback to update parent state if available
+      if (onProductDelete) {
+        onProductDelete(id);
+      }
+      
       toast.success('Product deleted successfully!');
-      // Reload the page to reflect changes
-      window.location.reload();
     }
   };
 
