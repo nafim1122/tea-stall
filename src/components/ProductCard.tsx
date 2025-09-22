@@ -179,7 +179,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
               <button
                 type="button"
                 role="radio"
-                aria-checked={selectedWeight === '1kg' ? 'true' : 'false'}
+                aria-checked={selectedWeight === '1kg'}
                 onClick={() => handleWeightChange('1kg')}
                 className={`flex-1 py-2 px-3 border-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   selectedWeight === '1kg'
@@ -194,7 +194,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
               <button
                 type="button"
                 role="radio"
-                aria-checked={selectedWeight === '0.5kg' ? 'true' : 'false'}
+                aria-checked={selectedWeight === '0.5kg'}
                 onClick={() => handleWeightChange('0.5kg')}
                 className={`flex-1 py-2 px-3 border-2 rounded-lg text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
                   selectedWeight === '0.5kg'
